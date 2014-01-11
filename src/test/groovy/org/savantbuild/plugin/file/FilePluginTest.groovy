@@ -51,7 +51,7 @@ class FilePluginTest {
   public static void beforeSuite() {
     projectDir = Paths.get("")
     if (!Files.isRegularFile(projectDir.resolve("LICENSE"))) {
-      projectDir = Paths.get("file-plugin")
+      projectDir = Paths.get("../file-plugin")
     }
   }
 
