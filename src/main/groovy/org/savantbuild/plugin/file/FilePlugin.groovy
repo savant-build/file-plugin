@@ -17,6 +17,7 @@ package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
 import org.savantbuild.io.Copier
+import org.savantbuild.io.FileTools
 import org.savantbuild.output.Output
 import org.savantbuild.plugin.groovy.BaseGroovyPlugin
 import org.savantbuild.util.jar.JarBuilder
@@ -54,5 +55,13 @@ class FilePlugin extends BaseGroovyPlugin {
 
   def jar(String file, Closure block) {
     jar(Paths.get(file), block)
+  }
+
+  def prune(String directory) {
+    FileTools.prune(project.directory.resolve(directory));
+  }
+
+  def prune(Path directory) {
+    FileTools.prune(project.directory.resolve(directory));
   }
 }
