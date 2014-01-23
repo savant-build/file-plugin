@@ -72,9 +72,8 @@ class FilePluginTest {
   @Test
   public void copyDirectoryToDirectoryWithPaths() throws Exception {
     FileTools.prune projectDir.resolve("build/test/copy")
-    plugin.copy {
-      to Paths.get("build/test/copy")
-      fileSet Paths.get("src/main/groovy")
+    plugin.copy(to: Paths.get("build/test/copy")) {
+      fileSet(dir: Paths.get("src/main/groovy"))
     }
 
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/copy/org/savantbuild/plugin/file/FilePlugin.groovy")))
@@ -83,9 +82,8 @@ class FilePluginTest {
   @Test
   public void copyDirectoryToDirectoryWithStrings() throws Exception {
     FileTools.prune projectDir.resolve("build/test/copy")
-    plugin.copy {
-      to "build/test/copy"
-      fileSet "src/main/groovy"
+    plugin.copy(to :"build/test/copy") {
+      fileSet(dir: "src/main/groovy")
     }
 
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/copy/org/savantbuild/plugin/file/FilePlugin.groovy")))
@@ -94,8 +92,8 @@ class FilePluginTest {
   @Test
   public void jarWithPaths() throws Exception {
     FileTools.prune projectDir.resolve("build/test/jar")
-    plugin.jar(Paths.get("build/test/jar/test.jar")) {
-      fileSet Paths.get("build/classes/main")
+    plugin.jar(file: Paths.get("build/test/jar/test.jar")) {
+      fileSet(dir: Paths.get("build/classes/main"))
     }
 
     assertJarContains(projectDir.resolve("build/test/jar/test.jar"), "org/savantbuild/plugin/file/FilePlugin.class")
@@ -104,8 +102,8 @@ class FilePluginTest {
   @Test
   public void jarWithStrings() throws Exception {
     FileTools.prune projectDir.resolve("build/test/jar")
-    plugin.jar("build/test/jar/test.jar") {
-      fileSet "build/classes/main"
+    plugin.jar(file: "build/test/jar/test.jar") {
+      fileSet(dir: "build/classes/main")
     }
 
     assertJarContains(projectDir.resolve("build/test/jar/test.jar"), "org/savantbuild/plugin/file/FilePlugin.class")

@@ -16,14 +16,11 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
-import org.savantbuild.io.Copier
 import org.savantbuild.io.FileTools
 import org.savantbuild.output.Output
+import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.plugin.groovy.BaseGroovyPlugin
-import org.savantbuild.util.jar.JarBuilder
-
-import java.nio.file.Path
-import java.nio.file.Paths
+import org.savantbuild.runtime.BuildFailureException
 
 /**
  * File plugin.
@@ -36,32 +33,52 @@ class FilePlugin extends BaseGroovyPlugin {
     super(project, output)
   }
 
-  def copy(Closure block) {
-    Copier copier = new Copier(project.directory)
-    block.setDelegate(copier)
-    block()
-    int count = copier.copy()
-    output.info("Copied [%d] files to [%s]", count, copier.to)
+  /**
+   * Copies files around. This uses the {@link CopyDelegate} class to handle Closure methods.
+   *
+   * @param attributes The named attributes (to is required).
+   * @param closure The closure that is invoked.
+   * @return The number of files copied.
+   */
+  int copy(Map<String, Object> attributes, Closure closure) {
+    def delegate = new CopyDelegate(attributes, project)
+    closure.delegate = delegate
+    closure()
+
+    int count = delegate.copier.copy()
+    output.info("Copied [%d] files to [%s]", count, delegate.copier.to)
+    return count
   }
 
-  def jar(Path file, Closure block) {
-    file = file.isAbsolute() ? file : project.directory.resolve(file)
-    JarBuilder builder = new JarBuilder(file, project.directory)
-    block.setDelegate(builder)
-    block()
-    int count = builder.build()
-    output.info("Jarred [%d] files to [%s]", count, file)
+  /**
+   * Creates a JAR file from various files. This uses the {@link JarDelegate} class to handle Closure methods.
+   *
+   * @param attributes The named attributes (file is required).
+   * @param closure The closure that is invoked.
+   * @return The number of files added to the Jar.
+   */
+  int jar(Map<String, Object> attributes, Closure closure) {
+    def delegate = new JarDelegate(attributes, project)
+    closure.delegate = delegate
+    closure()
+
+    int count = delegate.builder.build()
+    output.info("Added [%d] files to JAR [%s]", count, delegate.builder.file)
+    return count
   }
 
-  def jar(String file, Closure block) {
-    jar(Paths.get(file), block)
-  }
+  /**
+   * Prunes the given directory.
+   *
+   * @param attributes The named attributes (dir is required).
+   */
+  void prune(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], [:])) {
+      throw new BuildFailureException("The file plugin prune method must be called like this:\n\n" +
+          "  file.prune(dir: \"some dir\")")
+    }
 
-  def prune(String directory) {
-    FileTools.prune(project.directory.resolve(directory));
-  }
-
-  def prune(Path directory) {
+    def directory = FileTools.toPath(attributes["dir"])
     FileTools.prune(project.directory.resolve(directory));
   }
 }
