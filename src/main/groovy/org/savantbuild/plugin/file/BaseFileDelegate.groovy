@@ -15,13 +15,12 @@
  */
 package org.savantbuild.plugin.file
 import org.savantbuild.domain.Project
-import org.savantbuild.runtime.groovy.SavantGroovyObject
 /**
  * Base class for delegates that work on files.
  *
  * @author Brian Pontarelli
  */
-abstract class BaseFileDelegate extends SavantGroovyObject {
+abstract class BaseFileDelegate {
   protected final Project project
 
   BaseFileDelegate(Project project) {
