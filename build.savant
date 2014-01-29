@@ -24,7 +24,10 @@ project(group: "org.savantbuild.plugin", name: "file", version: "0.1.0", license
       dependency(id: "org.savantbuild:savant-dependency-management:0.1.0-{integration}")
       dependency(id: "org.savantbuild:savant-utils:0.1.0-{integration}")
     }
-    group(type: "test-compile") {
+    group(type: "compile") {
+      dependency(id: "org.apache.commons:commons-compress:1.7.0")
+    }
+    group(type: "test-compile", export: false) {
       dependency(id: "org.testng:testng:6.8.7")
     }
   }

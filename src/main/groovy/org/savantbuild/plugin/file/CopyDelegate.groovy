@@ -20,6 +20,7 @@ import org.savantbuild.io.Copier
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
+
 /**
  * Delegate for the copy method's closure. This passes through everything to the Copier.
  *

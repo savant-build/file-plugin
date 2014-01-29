@@ -27,7 +27,7 @@ import org.savantbuild.util.jar.JarBuilder
  * @author Brian Pontarelli
  */
 class JarDelegate extends BaseFileDelegate {
-  public static final String ERROR_MESSAGE = "The file plugin copy method must be called like this:\n\n" +
+  public static final String ERROR_MESSAGE = "The file plugin jar method must be called like this:\n\n" +
       "  file.jar(file: \"file.jar\") {\n" +
       "    fileSet(dir: \"some other dir\")\n" +
       "  }"

@@ -81,4 +81,21 @@ class FilePlugin extends BaseGroovyPlugin {
     def directory = FileTools.toPath(attributes["dir"])
     FileTools.prune(project.directory.resolve(directory));
   }
+
+  /**
+   * Creates a Tarball from various files. This uses the {@link TarDelegate} class to handle Closure methods.
+   *
+   * @param attributes The named attributes (file is required).
+   * @param closure The closure that is invoked.
+   * @return The number of files added to the Tarball.
+   */
+  int tar(Map<String, Object> attributes, Closure closure) {
+    def delegate = new TarDelegate(attributes, project)
+    closure.delegate = delegate
+    closure()
+
+    int count = delegate.builder.build()
+    output.info("Added [%d] files to JAR [%s]", count, delegate.builder.file)
+    return count
+  }
 }
