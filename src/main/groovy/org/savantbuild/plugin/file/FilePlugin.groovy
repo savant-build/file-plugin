@@ -94,8 +94,8 @@ class FilePlugin extends BaseGroovyPlugin {
     closure.delegate = delegate
     closure()
 
-    int count = delegate.builder.build()
-    output.info("Added [%d] files to JAR [%s]", count, delegate.builder.file)
+    int count = delegate.tar()
+    output.info("Added [%d] files to JAR [%s]", count, delegate.file)
     return count
   }
 }

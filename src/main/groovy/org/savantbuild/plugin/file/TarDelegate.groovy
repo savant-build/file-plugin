@@ -14,7 +14,6 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
-
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.savantbuild.domain.Project
@@ -28,7 +27,6 @@ import org.savantbuild.runtime.BuildFailureException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.GZIPOutputStream
-
 /**
  * Delegate for the tar method's closure. This does all the work of building Tarfiles.
  *
@@ -50,7 +48,7 @@ class TarDelegate extends BaseFileDelegate {
   TarDelegate(Map<String, Object> attributes, Project project) {
     super(project)
 
-    if (!GroovyTools.attributesValid(attributes, ["file"], ["file": String.class, "compress": Boolean.class])) {
+    if (!GroovyTools.attributesValid(attributes, ["file"], ["compress": Boolean.class])) {
       throw new BuildFailureException(ERROR_MESSAGE);
     }
 
@@ -116,13 +114,20 @@ class TarDelegate extends BaseFileDelegate {
   /**
    * Creates the tar file.
    */
-  void tar() {
+  int tar() {
     if (Files.exists(file)) {
       Files.delete(file)
     }
 
+    if (!Files.isDirectory(file.getParent())) {
+      Files.createDirectories(file.getParent())
+    }
+
+    int count = 0
     ByteArrayOutputStream baos = new ByteArrayOutputStream()
     new TarArchiveOutputStream(baos).withStream { tos ->
+      tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU)
+
       for (FileSet fileSet : fileSets) {
         for (FileInfo fileInfo : fileSet.toFileInfos()) {
           TarArchiveEntry entry = new TarArchiveEntry(fileInfo.relative.toString())
@@ -131,6 +136,7 @@ class TarDelegate extends BaseFileDelegate {
           tos.putArchiveEntry(entry)
           tos.write(Files.readAllBytes(fileInfo.origin))
           tos.closeArchiveEntry()
+          count++
         }
       }
     }
@@ -142,6 +148,8 @@ class TarDelegate extends BaseFileDelegate {
     } else {
       Files.write(file, baos.toByteArray())
     }
+
+    return count
   }
 
   private void addFileSet(FileSet fileSet) {

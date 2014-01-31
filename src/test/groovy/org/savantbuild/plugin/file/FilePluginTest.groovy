@@ -30,6 +30,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.jar.JarFile
 
+import static org.testng.Assert.assertEquals
 import static org.testng.Assert.assertNotNull
 import static org.testng.Assert.assertTrue
 
@@ -71,7 +72,7 @@ class FilePluginTest {
 
   @Test
   public void copyDirectoryToDirectoryWithPaths() throws Exception {
-    FileTools.prune projectDir.resolve("build/test/copy")
+    FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copy(to: Paths.get("build/test/copy")) {
       fileSet(dir: Paths.get("src/main/groovy"))
     }
@@ -81,7 +82,7 @@ class FilePluginTest {
 
   @Test
   public void copyDirectoryToDirectoryWithStrings() throws Exception {
-    FileTools.prune projectDir.resolve("build/test/copy")
+    FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copy(to :"build/test/copy") {
       fileSet(dir: "src/main/groovy")
     }
@@ -91,7 +92,7 @@ class FilePluginTest {
 
   @Test
   public void jarWithPaths() throws Exception {
-    FileTools.prune projectDir.resolve("build/test/jar")
+    FileTools.prune(projectDir.resolve("build/test/jar"))
     plugin.jar(file: Paths.get("build/test/jar/test.jar")) {
       fileSet(dir: Paths.get("build/classes/main"))
     }
@@ -101,12 +102,73 @@ class FilePluginTest {
 
   @Test
   public void jarWithStrings() throws Exception {
-    FileTools.prune projectDir.resolve("build/test/jar")
+    FileTools.prune(projectDir.resolve("build/test/jar"))
     plugin.jar(file: "build/test/jar/test.jar") {
       fileSet(dir: "build/classes/main")
     }
 
     assertJarContains(projectDir.resolve("build/test/jar/test.jar"), "org/savantbuild/plugin/file/FilePlugin.class")
+  }
+
+  @Test
+  public void tarCompressed() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/tar"))
+    plugin.tar(file: Paths.get("build/test/tar/test.tar.gz"), compress: true) {
+      fileSet(dir: Paths.get("build/classes/main"))
+      tarFileSet(prefix: "testing123", dir: Paths.get("build/classes/test"))
+    }
+
+    Process process = "gunzip test.tar.gz".execute([], projectDir.resolve("build/test/tar").toFile())
+    process.consumeProcessOutput()
+    process.waitFor()
+
+    assertEquals(process.exitValue(), 0)
+
+    process = "tar -xvf test.tar".execute([], projectDir.resolve("build/test/tar").toFile())
+    process.consumeProcessOutput()
+    process.waitFor()
+
+    assertEquals(process.exitValue(), 0)
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
+  }
+
+  @Test
+  public void tarWithPaths() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/tar"))
+    plugin.tar(file: Paths.get("build/test/tar/test.tar")) {
+      fileSet(dir: Paths.get("build/classes/main"))
+      tarFileSet(prefix: "testing123", dir: Paths.get("build/classes/test"))
+    }
+
+    Process process = "tar -xvf test.tar".execute([], projectDir.resolve("build/test/tar").toFile())
+    process.consumeProcessOutput()
+    process.waitFor()
+
+    assertEquals(process.exitValue(), 0)
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
+    assertTrue(Files.isReadable(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
+    assertTrue(Files.isWritable(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
+    assertTrue(Files.isReadable(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
+    assertTrue(Files.isWritable(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
+  }
+
+  @Test
+  public void tarWithStrings() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/tar"))
+    plugin.tar(file: "build/test/tar/test.tar") {
+      fileSet(dir: "build/classes/main")
+      tarFileSet(prefix: "testing123", dir: "build/classes/test")
+    }
+
+    Process process = "tar -xvf test.tar".execute([], projectDir.resolve("build/test/tar").toFile())
+    process.consumeProcessOutput()
+    process.waitFor()
+
+    assertEquals(process.exitValue(), 0)
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
   }
 
   private static void assertJarContains(Path jarFile, String... entries) {
