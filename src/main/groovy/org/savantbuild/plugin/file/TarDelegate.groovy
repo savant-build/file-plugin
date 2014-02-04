@@ -134,7 +134,7 @@ class TarDelegate extends BaseFileDelegate {
           entry.size = fileInfo.size
           entry.mode = fileInfo.toMode()
           tos.putArchiveEntry(entry)
-          tos.write(Files.readAllBytes(fileInfo.origin))
+          Files.copy(fileInfo.origin, tos)
           tos.closeArchiveEntry()
           count++
         }

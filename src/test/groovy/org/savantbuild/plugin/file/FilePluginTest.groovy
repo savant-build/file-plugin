@@ -14,7 +14,6 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
-
 import org.savantbuild.dep.domain.License
 import org.savantbuild.dep.domain.Version
 import org.savantbuild.domain.Project
@@ -28,12 +27,11 @@ import org.testng.annotations.Test
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.jar.JarEntry
 import java.util.jar.JarFile
+import java.util.jar.JarInputStream
 
-import static org.testng.Assert.assertEquals
-import static org.testng.Assert.assertNotNull
-import static org.testng.Assert.assertTrue
-
+import static org.testng.Assert.*
 /**
  * Tests the FilePlugin class.
  *
@@ -98,6 +96,7 @@ class FilePluginTest {
     }
 
     assertJarContains(projectDir.resolve("build/test/jar/test.jar"), "org/savantbuild/plugin/file/FilePlugin.class")
+    assertJarFileEquals(projectDir.resolve("build/test/jar/test.jar"), "org/savantbuild/plugin/file/FilePlugin.class", projectDir.resolve("build/classes/main/org/savantbuild/plugin/file/FilePlugin.class"))
   }
 
   @Test
@@ -108,6 +107,7 @@ class FilePluginTest {
     }
 
     assertJarContains(projectDir.resolve("build/test/jar/test.jar"), "org/savantbuild/plugin/file/FilePlugin.class")
+    assertJarFileEquals(projectDir.resolve("build/test/jar/test.jar"), "org/savantbuild/plugin/file/FilePlugin.class", projectDir.resolve("build/classes/main/org/savantbuild/plugin/file/FilePlugin.class"))
   }
 
   @Test
@@ -175,5 +175,30 @@ class FilePluginTest {
     JarFile jf = new JarFile(jarFile.toFile())
     entries.each({ entry -> assertNotNull(jf.getEntry(entry), "Jar [${jarFile}] is missing entry [${entry}]") })
     jf.close()
+  }
+
+  private static void assertJarFileEquals(Path jarFile, String entry, Path original) throws IOException {
+    JarInputStream jis = new JarInputStream(Files.newInputStream(jarFile));
+    JarEntry jarEntry = jis.getNextJarEntry();
+    while (jarEntry != null && !jarEntry.getName().equals(entry)) {
+      jarEntry = jis.getNextJarEntry();
+    }
+
+    if (jarEntry == null) {
+      fail("Jar [" + jarFile + "] is missing entry [" + entry + "]");
+    }
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] buf = new byte[1024];
+    int length;
+    while ((length = jis.read(buf)) != -1) {
+      baos.write(buf, 0, length);
+    }
+
+    assertEquals(Files.readAllBytes(original), baos.toByteArray());
+    assertEquals(jarEntry.getSize(), Files.size(original));
+    assertEquals(jarEntry.getCreationTime(), Files.getAttribute(original, "creationTime"));
+    assertEquals(jarEntry.getLastModifiedTime(), Files.getLastModifiedTime(original));
+    assertEquals(jarEntry.getTime(), Files.getLastModifiedTime(original).toMillis());
   }
 }
