@@ -14,7 +14,9 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
+
 import org.savantbuild.domain.Project
+
 /**
  * Base class for delegates that work on files.
  *
