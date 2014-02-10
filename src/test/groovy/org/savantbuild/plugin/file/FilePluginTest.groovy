@@ -79,6 +79,16 @@ class FilePluginTest {
   }
 
   @Test
+  public void copyWithIncludePatterns() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/copy"))
+    plugin.copy(to: Paths.get("build/test/copy")) {
+      fileSet(dir: Paths.get("src/main/groovy"), includePatterns: [/.*\/file\/.*/])
+    }
+
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/copy/org/savantbuild/plugin/file/FilePlugin.groovy")))
+  }
+
+  @Test
   public void copyDirectoryToDirectoryWithStrings() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copy(to :"build/test/copy") {
@@ -198,7 +208,5 @@ class FilePluginTest {
     assertEquals(Files.readAllBytes(original), baos.toByteArray());
     assertEquals(jarEntry.getSize(), Files.size(original));
     assertEquals(jarEntry.getCreationTime(), Files.getAttribute(original, "creationTime"));
-    assertEquals(jarEntry.getLastModifiedTime(), Files.getLastModifiedTime(original));
-    assertEquals(jarEntry.getTime(), Files.getLastModifiedTime(original).toMillis());
   }
 }

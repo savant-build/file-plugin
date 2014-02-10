@@ -17,9 +17,14 @@ package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
 import org.savantbuild.io.Copier
+import org.savantbuild.io.FileSet
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
+
+import java.nio.file.Path
+import java.util.function.Function
+import java.util.regex.Pattern
 
 /**
  * Delegate for the copy method's closure. This passes through everything to the Copier.
@@ -56,12 +61,43 @@ class CopyDelegate extends BaseFileDelegate {
    * @return The Copier.
    */
   Copier fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], ["includePatterns": List.class])) {
+      throw new BuildFailureException(ERROR_MESSAGE)
+    }
+
+    Path dir = FileTools.toPath(attributes["dir"])
+    List includePatterns = attributes["includePatterns"]
+    if (includePatterns == null) {
+      includePatterns = []
+    } else {
+      GroovyTools.convertListItems(includePatterns, Pattern.class, { value -> Pattern.compile(value.toString()) } as Function<Object, Pattern>)
+    }
+
+    copier.fileSet(new FileSet(project.directory.resolve(dir), includePatterns))
+    return copier
+  }
+
+  /**
+   * Adds an optional fileSet:
+   *
+   * <pre>
+   *   optionalFileSet(dir: "someDir")
+   * </pre>
+   *
+   * @param attributes The named attributes (dir is required).
+   * @return The Copier.
+   */
+  Copier optionalFileSet(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], ["includePatterns": Collection.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
     def dir = FileTools.toPath(attributes["dir"])
-    copier.fileSet(project.directory.resolve(dir))
+    def includePatterns = attributes["includePatterns"]
+    if (includePatterns == null) {
+      includePatterns = []
+    }
+    copier.optionalFileSet(new FileSet(project.directory.resolve(dir), includePatterns))
     return copier
   }
 }
