@@ -35,6 +35,14 @@ class FilePlugin extends BaseGroovyPlugin {
 
   /**
    * Copies files around. This uses the {@link CopyDelegate} class to handle Closure methods.
+   * <p/>
+   * Here is an example of calling this method:
+   * <p/>
+   * <pre>
+   *   file.copy(to: "build/distributions/bin") {
+   *     fileSet(dir: "src/main/scripts")
+   *   }
+   * </pre>
    *
    * @param attributes The named attributes (to is required).
    * @param closure The closure that is invoked.
@@ -52,6 +60,14 @@ class FilePlugin extends BaseGroovyPlugin {
 
   /**
    * Creates a JAR file from various files. This uses the {@link JarDelegate} class to handle Closure methods.
+   * <p/>
+   * Here is an example of calling this method:
+   * <p/>
+   * <pre>
+   *   file.jar(file: "build/jars/foo.jar") {
+   *     fileSet(dir: "build/classes/main")
+   *   }
+   * </pre>
    *
    * @param attributes The named attributes (file is required).
    * @param closure The closure that is invoked.
@@ -68,7 +84,13 @@ class FilePlugin extends BaseGroovyPlugin {
   }
 
   /**
-   * Prunes the given directory.
+   * Prunes the given directory. This does not traverse symlinks. It unlinks symlinks.
+   * <p/>
+   * Here is an example of calling this method:
+   * <p/>
+   * <pre>
+   *   file.prune(dir: "build/classes/main")
+   * </pre>
    *
    * @param attributes The named attributes (dir is required).
    */
@@ -84,6 +106,14 @@ class FilePlugin extends BaseGroovyPlugin {
 
   /**
    * Creates a Tarball from various files. This uses the {@link TarDelegate} class to handle Closure methods.
+   * <p/>
+   * Here is an example of calling this method:
+   * <p/>
+   * <pre>
+   *   file.tar(file: "build/tars/foobar.tar.gz") {
+   *     fileSet(dir: "src/main/java")
+   *   }
+   * </pre>
    *
    * @param attributes The named attributes (file is required).
    * @param closure The closure that is invoked.
