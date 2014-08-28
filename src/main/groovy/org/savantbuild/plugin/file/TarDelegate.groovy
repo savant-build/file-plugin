@@ -14,6 +14,7 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
+
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.savantbuild.domain.Project
@@ -27,6 +28,7 @@ import org.savantbuild.runtime.BuildFailureException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.GZIPOutputStream
+
 /**
  * Delegate for the tar method's closure. This does all the work of building Tarfiles.
  *
@@ -48,7 +50,7 @@ class TarDelegate extends BaseFileDelegate {
   TarDelegate(Map<String, Object> attributes, Project project) {
     super(project)
 
-    if (!GroovyTools.attributesValid(attributes, ["file"], ["compress": Boolean.class])) {
+    if (!GroovyTools.attributesValid(attributes, ["file", "compress"], ["file"], ["compress": Boolean.class])) {
       throw new BuildFailureException(ERROR_MESSAGE);
     }
 
@@ -66,7 +68,7 @@ class TarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
@@ -84,7 +86,7 @@ class TarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
@@ -102,7 +104,7 @@ class TarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void tarFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix"], ["dir", "prefix"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 

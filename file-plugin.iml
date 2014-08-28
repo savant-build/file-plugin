@@ -25,7 +25,6 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="savant-dependency-management" scope="PROVIDED" />
     <orderEntry type="module-library" scope="PROVIDED">
       <library>
         <CLASSES>

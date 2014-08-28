@@ -42,7 +42,7 @@ class CopyDelegate extends BaseFileDelegate {
   CopyDelegate(Map<String, Object> attributes, Project project) {
     super(project)
 
-    if (!GroovyTools.attributesValid(attributes, ["to"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["to"], ["to"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE);
     }
 
@@ -61,7 +61,7 @@ class CopyDelegate extends BaseFileDelegate {
    * @return The Copier.
    */
   Copier fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], ["includePatterns": List.class])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns"], ["dir"], ["includePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
@@ -88,12 +88,12 @@ class CopyDelegate extends BaseFileDelegate {
    * @return The Copier.
    */
   Copier optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], ["includePatterns": Collection.class])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns"], ["dir"], ["includePatterns": Collection.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    def dir = FileTools.toPath(attributes["dir"])
-    def includePatterns = attributes["includePatterns"]
+    Path dir = FileTools.toPath(attributes["dir"])
+    List includePatterns = attributes["includePatterns"]
     if (includePatterns == null) {
       includePatterns = []
     }

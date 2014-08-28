@@ -21,6 +21,10 @@ import org.savantbuild.output.Output
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.plugin.groovy.BaseGroovyPlugin
 import org.savantbuild.runtime.BuildFailureException
+import org.savantbuild.runtime.RuntimeConfiguration
+
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * File plugin.
@@ -29,8 +33,8 @@ import org.savantbuild.runtime.BuildFailureException
  */
 class FilePlugin extends BaseGroovyPlugin {
 
-  FilePlugin(Project project, Output output) {
-    super(project, output)
+  FilePlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
+    super(project, runtimeConfiguration, output)
   }
 
   /**
@@ -51,11 +55,17 @@ class FilePlugin extends BaseGroovyPlugin {
   int copy(Map<String, Object> attributes, Closure closure) {
     def delegate = new CopyDelegate(attributes, project)
     closure.delegate = delegate
-    closure()
+    try {
+      closure()
 
-    int count = delegate.copier.copy()
-    output.info("Copied [%d] files to [%s]", count, delegate.copier.to)
-    return count
+      int count = delegate.copier.copy()
+      output.info("Copied [%d] files to [%s]", count, delegate.copier.to)
+      return count
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
+      return 0
+    }
   }
 
   /**
@@ -76,11 +86,32 @@ class FilePlugin extends BaseGroovyPlugin {
   int jar(Map<String, Object> attributes, Closure closure) {
     def delegate = new JarDelegate(attributes, project)
     closure.delegate = delegate
-    closure()
+    try {
+      closure()
 
-    int count = delegate.builder.build()
-    output.info("Added [%d] files to JAR [%s]", count, delegate.builder.file)
-    return count
+      delegate.builder.ensureManifest("${project.group}.${project.name}".toString(), project.version.toString())
+
+      int count = delegate.builder.build()
+      output.info("Added [%d] files to JAR [%s]", count, delegate.builder.file)
+      return count
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
+      return 0
+    }
+  }
+
+  /**
+   * Creates a directory. Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.mkdir(dir: "foo")
+   * </pre>
+   *
+   * @param attributes The named attributes (dir is required).
+   */
+  void mkdir(Map<String, Object> attributes) {
+    Files.createDirectories(FileTools.toPath(attributes["dir"]))
   }
 
   /**
@@ -95,13 +126,18 @@ class FilePlugin extends BaseGroovyPlugin {
    * @param attributes The named attributes (dir is required).
    */
   void prune(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
       throw new BuildFailureException("The file plugin prune method must be called like this:\n\n" +
           "  file.prune(dir: \"some dir\")")
     }
 
-    def directory = FileTools.toPath(attributes["dir"])
-    FileTools.prune(project.directory.resolve(directory));
+    Path directory = FileTools.toPath(attributes["dir"])
+    try {
+      FileTools.prune(project.directory.resolve(directory));
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
+    }
   }
 
   /**
@@ -122,10 +158,16 @@ class FilePlugin extends BaseGroovyPlugin {
   int tar(Map<String, Object> attributes, Closure closure) {
     def delegate = new TarDelegate(attributes, project)
     closure.delegate = delegate
-    closure()
+    try {
+      closure()
 
-    int count = delegate.tar()
-    output.info("Added [%d] files to JAR [%s]", count, delegate.file)
-    return count
+      int count = delegate.tar()
+      output.info("Added [%d] files to JAR [%s]", count, delegate.file)
+      return count
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
+      return 0
+    }
   }
 }

@@ -30,6 +30,7 @@ class JarDelegate extends BaseFileDelegate {
   public static final String ERROR_MESSAGE = "The file plugin jar method must be called like this:\n\n" +
       "  file.jar(file: \"file.jar\") {\n" +
       "    fileSet(dir: \"some other dir\")\n" +
+      "    manifest(file: \"some file\")\n" +
       "  }"
 
   public final JarBuilder builder
@@ -37,7 +38,7 @@ class JarDelegate extends BaseFileDelegate {
   JarDelegate(Map<String, Object> attributes, Project project) {
     super(project)
 
-    if (!GroovyTools.attributesValid(attributes, ["file"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["file"], ["file"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE);
     }
 
@@ -56,12 +57,44 @@ class JarDelegate extends BaseFileDelegate {
    * @return The JarBuilder.
    */
   JarBuilder fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
     def dir = FileTools.toPath(attributes["dir"])
     builder.fileSet(project.directory.resolve(dir))
+    return builder
+  }
+
+  /**
+   * Adds a MANIFEST.MF file to the jar. This can specify a file for the manifest or it can specify the manifest using a
+   * Map of values. Here are some examples:
+   * <p>
+   * <pre>
+   *   manifest(file: "src/main/META-INF/MANIFEST.MF")
+   * </pre>
+   * <p>
+   * <pre>
+   *   manifest(map: [
+   *     "Implementation-Version": project.version
+   *   ])
+   * </pre>
+   *
+   * @param attributes The named attributes.
+   * @return The JarBuilder
+   */
+  JarBuilder manifest(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["file", "map"], [], ["map": Map.class])) {
+      throw new BuildFailureException("Invalid manifest directive ${attributes.keySet()}. ${ERROR_MESSAGE}")
+    }
+
+    if (attributes.containsKey("file")) {
+      println "File attribute"
+      builder.manifest(FileTools.toPath(attributes["file"]))
+    } else if (attributes.containsKey("map")) {
+      println "Map attribute"
+      builder.manifest(attributes["map"])
+    }
     return builder
   }
 
@@ -76,7 +109,7 @@ class JarDelegate extends BaseFileDelegate {
    * @return The JarBuilder.
    */
   JarBuilder optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
