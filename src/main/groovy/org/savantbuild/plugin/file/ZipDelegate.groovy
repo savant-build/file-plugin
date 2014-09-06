@@ -15,32 +15,32 @@
  */
 package org.savantbuild.plugin.file
 import org.savantbuild.domain.Project
-import org.savantbuild.io.Copier
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
+import org.savantbuild.util.zip.ZipBuilder
 /**
- * Delegate for the copy method's closure. This passes through everything to the Copier.
+ * Delegate for the zip method's closure. This passes through everything to the ZipBuilder.
  *
  * @author Brian Pontarelli
  */
-class CopyDelegate extends BaseFileDelegate {
-  public static final String ERROR_MESSAGE = "The file plugin copy method must be called like this:\n\n" +
-      "  file.copy(to: \"some dir\") {\n" +
-      "    fileSet(dir: \"some other dir\")" +
+class ZipDelegate extends BaseFileDelegate {
+  public static final String ERROR_MESSAGE = "The file plugin zip method must be called like this:\n\n" +
+      "  file.zip(file: \"file.zip\") {\n" +
+      "    fileSet(dir: \"some other dir\")\n" +
       "  }"
 
-  public final Copier copier
+  public final ZipBuilder builder
 
-  CopyDelegate(Map<String, Object> attributes, Project project) {
+  ZipDelegate(Map<String, Object> attributes, Project project) {
     super(project)
 
-    if (!GroovyTools.attributesValid(attributes, ["to"], ["to"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["file"], ["file"], [:])) {
       throw new BuildFailureException(ERROR_MESSAGE);
     }
 
-    def to = FileTools.toPath(attributes["to"])
-    this.copier = new Copier(project.directory.resolve(to))
+    def file = FileTools.toPath(attributes["file"])
+    this.builder = new ZipBuilder(project.directory.resolve(file))
   }
 
   /**
@@ -51,33 +51,33 @@ class CopyDelegate extends BaseFileDelegate {
    * </pre>
    *
    * @param attributes The named attributes (dir is required).
-   * @return The Copier.
+   * @return The ZipBuilder.
    */
-  Copier fileSet(Map<String, Object> attributes) {
+  ZipBuilder fileSet(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    copier.fileSet(toFileSet(attributes))
-    return copier
+    builder.fileSet(toFileSet(attributes))
+    return builder
   }
 
   /**
-   * Adds an optional fileSet:
+   * Adds an optionalFileSet:
    *
    * <pre>
    *   optionalFileSet(dir: "someDir")
    * </pre>
    *
    * @param attributes The named attributes (dir is required).
-   * @return The Copier.
+   * @return The ZipBuilder.
    */
-  Copier optionalFileSet(Map<String, Object> attributes) {
+  ZipBuilder optionalFileSet(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    copier.optionalFileSet(toFileSet(attributes))
-    return copier
+    builder.optionalFileSet(toFileSet(attributes))
+    return builder
   }
 }

@@ -170,4 +170,35 @@ class FilePlugin extends BaseGroovyPlugin {
       return 0
     }
   }
+
+  /**
+   * Creates a ZIP file from various files. This uses the {@link ZipDelegate} class to handle Closure methods.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.zip(file: "build/jars/foo.zip") {
+   *     fileSet(dir: "build/classes/main")
+   *   }
+   * </pre>
+   *
+   * @param attributes The named attributes (file is required).
+   * @param closure The closure that is invoked.
+   * @return The number of files added to the ZIP.
+   */
+  int zip(Map<String, Object> attributes, Closure closure) {
+    def delegate = new ZipDelegate(attributes, project)
+    closure.delegate = delegate
+    try {
+      closure()
+
+      int count = delegate.builder.build()
+      output.info("Added [%d] files to ZIP [%s]", count, delegate.builder.file)
+      return count
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
+      return 0
+    }
+  }
 }

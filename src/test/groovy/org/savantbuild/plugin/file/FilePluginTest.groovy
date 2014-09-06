@@ -29,11 +29,10 @@ import org.testng.annotations.Test
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.jar.Attributes
-import java.util.jar.JarEntry
-import java.util.jar.JarFile
-import java.util.jar.JarInputStream
-import java.util.jar.Manifest
+import java.util.jar.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 
 import static org.testng.Assert.*
 
@@ -235,6 +234,28 @@ class FilePluginTest {
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
   }
 
+  @Test
+  public void zipWithPaths() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/zip"))
+    plugin.zip(file: Paths.get("build/test/zip/test.zip")) {
+      fileSet(dir: Paths.get("build/classes/main"))
+    }
+
+    assertZipContains(projectDir.resolve("build/test/zip/test.zip"), "org/savantbuild/plugin/file/FilePlugin.class")
+    assertZipFileEquals(projectDir.resolve("build/test/zip/test.zip"), "org/savantbuild/plugin/file/FilePlugin.class", projectDir.resolve("build/classes/main/org/savantbuild/plugin/file/FilePlugin.class"))
+  }
+
+  @Test
+  public void zipWithStrings() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/zip"))
+    plugin.zip(file: "build/test/zip/test.zip") {
+      fileSet(dir: "build/classes/main")
+    }
+
+    assertZipContains(projectDir.resolve("build/test/zip/test.zip"), "org/savantbuild/plugin/file/FilePlugin.class")
+    assertZipFileEquals(projectDir.resolve("build/test/zip/test.zip"), "org/savantbuild/plugin/file/FilePlugin.class", projectDir.resolve("build/classes/main/org/savantbuild/plugin/file/FilePlugin.class"))
+  }
+
   private static void assertJarContains(Path jarFile, String... entries) {
     JarFile jf = new JarFile(jarFile.toFile())
     entries.each({ entry -> assertNotNull(jf.getEntry(entry), "Jar [${jarFile}] is missing entry [${entry}]") })
@@ -274,5 +295,35 @@ class FilePluginTest {
 
     assertEquals(actual.getMainAttributes(), expected.getMainAttributes(), "Actual " + actual.getMainAttributes() + " expected " + expected.getMainAttributes());
     jf.close()
+  }
+
+  private static void assertZipContains(Path zipFile, String... entries) {
+    ZipFile jf = new ZipFile(zipFile.toFile())
+    entries.each({ entry -> assertNotNull(jf.getEntry(entry), "Zip [${zipFile}] is missing entry [${entry}]") })
+    jf.close()
+  }
+
+  private static void assertZipFileEquals(Path zipFile, String entry, Path original) throws IOException {
+    ZipInputStream jis = new ZipInputStream(Files.newInputStream(zipFile))
+    ZipEntry zipEntry = jis.getNextEntry()
+    while (zipEntry != null && !zipEntry.getName().equals(entry)) {
+      zipEntry = jis.getNextEntry()
+    }
+
+    if (zipEntry == null) {
+      fail("Zip [" + zipFile + "] is missing entry [" + entry + "]")
+    }
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream()
+    byte[] buf = new byte[1024]
+    int length
+    while ((length = jis.read(buf)) != -1) {
+      baos.write(buf, 0, length)
+    }
+
+    assertEquals(Files.readAllBytes(original), baos.toByteArray())
+    assertEquals(zipEntry.getSize(), Files.size(original))
+    assertEquals(zipEntry.getCreationTime(), Files.getAttribute(original, "creationTime"))
+    jis.close()
   }
 }

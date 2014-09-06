@@ -57,12 +57,11 @@ class JarDelegate extends BaseFileDelegate {
    * @return The JarBuilder.
    */
   JarBuilder fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    def dir = FileTools.toPath(attributes["dir"])
-    builder.fileSet(project.directory.resolve(dir))
+    builder.fileSet(toFileSet(attributes))
     return builder
   }
 
@@ -109,12 +108,11 @@ class JarDelegate extends BaseFileDelegate {
    * @return The JarBuilder.
    */
   JarBuilder optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    def dir = FileTools.toPath(attributes["dir"])
-    builder.optionalFileSet(project.directory.resolve(dir))
+    builder.optionalFileSet(toFileSet(attributes))
     return builder
   }
 }

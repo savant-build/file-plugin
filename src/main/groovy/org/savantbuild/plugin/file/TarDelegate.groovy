@@ -18,7 +18,6 @@ package org.savantbuild.plugin.file
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.savantbuild.domain.Project
-import org.savantbuild.io.ArchiveFileSet
 import org.savantbuild.io.FileInfo
 import org.savantbuild.io.FileSet
 import org.savantbuild.io.FileTools
@@ -68,12 +67,11 @@ class TarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    def dir = FileTools.toPath(attributes["dir"])
-    addFileSet(new FileSet(project.directory.resolve(dir)))
+    addFileSet(toFileSet(attributes))
   }
 
   /**
@@ -86,12 +84,11 @@ class TarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir"], ["dir"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    def dir = FileTools.toPath(attributes["dir"])
-    addOptionalFileSet(new FileSet(project.directory.resolve(dir)))
+    addOptionalFileSet(toFileSet(attributes))
   }
 
   /**
@@ -104,13 +101,11 @@ class TarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void tarFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix"], ["dir", "prefix"], [:])) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix", "includePatterns", "excludePatterns"], ["dir", "prefix"], ["prefix": String.class, "includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    def dir = FileTools.toPath(attributes["dir"])
-    def prefix = GroovyTools.toString(attributes, "prefix")
-    addFileSet(new ArchiveFileSet(project.directory.resolve(dir), prefix))
+    addFileSet(toArchiveFileSet(attributes))
   }
 
   /**
