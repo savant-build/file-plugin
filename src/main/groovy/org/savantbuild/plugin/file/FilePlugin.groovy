@@ -22,6 +22,8 @@ import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.plugin.groovy.BaseGroovyPlugin
 import org.savantbuild.runtime.BuildFailureException
 import org.savantbuild.runtime.RuntimeConfiguration
+import org.savantbuild.util.tar.TarTools
+import org.savantbuild.util.zip.ZipTools
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -141,6 +143,40 @@ class FilePlugin extends BaseGroovyPlugin {
   }
 
   /**
+   * Creates a symbol link at the [link] attribute that points to the [target] attribute.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.symlink(target: "build/classes/main", link: "/tmp/foo/bar")
+   * </pre>
+   *
+   * @param attributes The named attributes (target and link are required).
+   */
+  void symlink(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["target", "link"], ["target", "link"], [:])) {
+      fail("The file plugin symlink method must be called like this:\n\n" +
+          "  file.symlink(target: \"some dir\", link: \"some other dir\")")
+    }
+
+    Path target = project.directory.resolve(FileTools.toPath(attributes["target"])).toAbsolutePath()
+    if (Files.notExists(target)) {
+      fail("Invalid target directory [${target}]")
+    }
+
+    Path link = project.directory.resolve(FileTools.toPath(attributes["link"]))
+    if (Files.exists(link) && Files.isSymbolicLink(link)) {
+      Files.delete(link)
+    } else if (Files.exists(link)) {
+      fail("The link [${link}] exists and is a regular file or directory")
+    } else if (Files.notExists(link.getParent())) {
+      Files.createDirectories(link.getParent())
+    }
+
+    Files.createSymbolicLink(link, target)
+  }
+
+  /**
    * Creates a Tarball from various files. This uses the {@link TarDelegate} class to handle Closure methods.
    * <p>
    * Here is an example of calling this method:
@@ -161,13 +197,83 @@ class FilePlugin extends BaseGroovyPlugin {
     try {
       closure()
 
-      int count = delegate.tar()
-      output.info("Added [%d] files to JAR [%s]", count, delegate.file)
+      int count = delegate.builder.build()
+      output.info("Added [%d] files to TAR [%s]", count, delegate.builder.file)
       return count
     } catch (IOException e) {
       output.debug(e)
       fail(e.getMessage())
       return 0
+    }
+  }
+
+  /**
+   * Untars a TAR file to a directory. This requires the [file] and [to] attributes.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.untar(file: "build/tars/foobar.tar.gz", to: "build/output")
+   * </pre>
+   *
+   * @param attributes The named attributes (file is required).
+   * @param closure The closure that is invoked.
+   */
+  void untar(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["file", "to", "useGroup", "useOwner"], ["file", "to"], [:])) {
+      fail("You must supply a [file] and [to] attribute like this:\n" +
+          "  file.unzip(file: \"foo.zip\", to: \"some-dir\")")
+    }
+
+    Path file = project.directory.resolve(FileTools.toPath(attributes["file"]))
+    Path to = project.directory.resolve(FileTools.toPath(attributes["to"]))
+    boolean useGroup = attributes["useGroup"] ? attributes["useGroup"] : false
+    boolean useOwner = attributes["useOwner"] ? attributes["useOwner"] : false
+
+    if (!Files.isRegularFile(file)) {
+      fail("TAR file [${file}] does not exist")
+    }
+
+    try {
+      output.info("Untarring [${file}] to [${to}]")
+      TarTools.untar(file, to, useGroup, useOwner)
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
+    }
+  }
+
+  /**
+   * Unzips a ZIP file to a directory. This requires the [file] and [to] attributes.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.unzip(file: "build/zips/foobar.zip", to: "build/output")
+   * </pre>
+   *
+   * @param attributes The named attributes (file is required).
+   * @param closure The closure that is invoked.
+   */
+  void unzip(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["file", "to"], ["file", "to"], [:])) {
+      fail("You must supply a [file] and [to] attribute like this:\n" +
+          "  file.unzip(file: \"foo.zip\", to: \"some-dir\")")
+    }
+
+    Path file = project.directory.resolve(FileTools.toPath(attributes["file"]))
+    Path to = project.directory.resolve(FileTools.toPath(attributes["to"]))
+
+    if (!Files.isRegularFile(file)) {
+      fail("Zip file [${file}] does not exist")
+    }
+
+    try {
+      output.info("Unzipping [${file}] to [${to}]")
+      ZipTools.unzip(file, to)
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
     }
   }
 

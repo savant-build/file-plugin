@@ -15,18 +15,11 @@
  */
 package org.savantbuild.plugin.file
 
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.savantbuild.domain.Project
-import org.savantbuild.io.FileInfo
-import org.savantbuild.io.FileSet
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
-
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.zip.GZIPOutputStream
+import org.savantbuild.util.tar.TarBuilder
 
 /**
  * Delegate for the tar method's closure. This does all the work of building Tarfiles.
@@ -35,16 +28,12 @@ import java.util.zip.GZIPOutputStream
  */
 class TarDelegate extends BaseFileDelegate {
   public static final String ERROR_MESSAGE = "The file plugin tar method must be called like this:\n\n" +
-      "  file.tar(file: \"file.jar\") {\n" +
+      "  file.tar(file: \"file.tar.gz\", compress: true, storeGroup: true, storeOwner: true) {\n" +
       "    fileSet(dir: \"some other dir\")\n" +
       "    tarFileSet(dir: \"some other dir\", prefix: \"some-prefix\")\n" +
       "  }"
 
-  public final Path file
-
-  public final boolean compress
-
-  public final List<FileSet> fileSets = new ArrayList<>()
+  public final TarBuilder builder
 
   TarDelegate(Map<String, Object> attributes, Project project) {
     super(project)
@@ -53,8 +42,16 @@ class TarDelegate extends BaseFileDelegate {
       throw new BuildFailureException(ERROR_MESSAGE);
     }
 
-    this.compress = attributes["compress"]
-    this.file = project.directory.resolve(FileTools.toPath(attributes["file"]))
+    this.builder = new TarBuilder(project.directory.resolve(FileTools.toPath(attributes["file"])))
+    if (attributes["compress"]) {
+      this.builder.compress = attributes["compress"]
+    }
+    if (attributes["storeGroup"]) {
+      this.builder.storeGroup = attributes["storeGroup"]
+    }
+    if (attributes["storeOwner"]) {
+      this.builder.storeOwner = attributes["storeOwner"]
+    }
   }
 
   /**
@@ -71,7 +68,7 @@ class TarDelegate extends BaseFileDelegate {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    addFileSet(toFileSet(attributes))
+    builder.fileSet(toFileSet(attributes))
   }
 
   /**
@@ -88,7 +85,7 @@ class TarDelegate extends BaseFileDelegate {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    addOptionalFileSet(toFileSet(attributes))
+    builder.optionalFileSet(toFileSet(attributes))
   }
 
   /**
@@ -105,70 +102,6 @@ class TarDelegate extends BaseFileDelegate {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
-    addFileSet(toArchiveFileSet(attributes))
-  }
-
-  /**
-   * Creates the tar file.
-   */
-  int tar() {
-    if (Files.exists(file)) {
-      Files.delete(file)
-    }
-
-    if (!Files.isDirectory(file.getParent())) {
-      Files.createDirectories(file.getParent())
-    }
-
-    int count = 0
-    ByteArrayOutputStream baos = new ByteArrayOutputStream()
-    new TarArchiveOutputStream(baos).withStream { tos ->
-      tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU)
-
-      for (FileSet fileSet : fileSets) {
-        for (FileInfo fileInfo : fileSet.toFileInfos()) {
-          TarArchiveEntry entry = new TarArchiveEntry(fileInfo.relative.toString())
-          entry.size = fileInfo.size
-          entry.mode = fileInfo.toMode()
-          tos.putArchiveEntry(entry)
-          Files.copy(fileInfo.origin, tos)
-          tos.closeArchiveEntry()
-          count++
-        }
-      }
-    }
-
-    if (compress) {
-      new GZIPOutputStream(Files.newOutputStream(file)).withStream { gos ->
-        gos.write(baos.toByteArray())
-      }
-    } else {
-      Files.write(file, baos.toByteArray())
-    }
-
-    return count
-  }
-
-  private void addFileSet(FileSet fileSet) {
-    if (Files.isRegularFile(fileSet.directory)) {
-      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] is a file and must be a directory")
-    }
-
-    if (!Files.isDirectory(fileSet.directory)) {
-      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] does not exist")
-    }
-
-    fileSets.add(fileSet)
-  }
-
-  private void addOptionalFileSet(FileSet fileSet) throws IOException {
-    if (Files.isRegularFile(fileSet.directory)) {
-      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] is a file and must be a directory")
-    }
-
-    // Only add if it exists
-    if (Files.isDirectory(fileSet.directory)) {
-      fileSets.add(fileSet)
-    }
+    builder.fileSet(toArchiveFileSet(attributes))
   }
 }

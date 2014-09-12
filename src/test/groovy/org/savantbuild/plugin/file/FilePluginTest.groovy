@@ -174,6 +174,16 @@ class FilePluginTest {
   }
 
   @Test
+  public void symlink() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test"))
+    assertFalse(Files.isDirectory(projectDir.resolve("build/test")))
+
+    plugin.symlink(link: "build/test/link", target: "src/main/groovy")
+    assertTrue(Files.isSymbolicLink(projectDir.resolve("build/test/link")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/link/org/savantbuild/plugin/file/FilePlugin.groovy")))
+  }
+
+  @Test
   public void tarCompressed() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/tar"))
     plugin.tar(file: Paths.get("build/test/tar/test.tar.gz"), compress: true) {

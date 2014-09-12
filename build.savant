@@ -27,15 +27,12 @@ project(group: "org.savantbuild.plugin", name: "file", version: "0.2.0", license
   }
 
   dependencies {
-    group(type: "provided") {
+    group(name: "provided") {
       dependency(id: "org.savantbuild:savant-core:${savantVersion}")
       dependency(id: "org.savantbuild:savant-dependency-management:${savantVersion}")
       dependency(id: "org.savantbuild:savant-utils:${savantVersion}")
     }
-    group(type: "compile") {
-      dependency(id: "org.apache.commons:commons-compress:1.7.0")
-    }
-    group(type: "test-compile", export: false) {
+    group(name: "test-compile", export: false) {
       dependency(id: "org.testng:testng:6.8.7")
     }
   }
