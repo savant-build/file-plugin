@@ -113,7 +113,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @param attributes The named attributes (dir is required).
    */
   void mkdir(Map<String, Object> attributes) {
-    Files.createDirectories(FileTools.toPath(attributes["dir"]))
+    Files.createDirectories(project.directory.resolve(FileTools.toPath(attributes["dir"])))
   }
 
   /**

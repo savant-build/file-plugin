@@ -89,7 +89,7 @@ class JarDelegate extends BaseFileDelegate {
 
     if (attributes.containsKey("file")) {
       println "File attribute"
-      builder.manifest(FileTools.toPath(attributes["file"]))
+      builder.manifest(project.directory.resolve(FileTools.toPath(attributes["file"])))
     } else if (attributes.containsKey("map")) {
       println "Map attribute"
       builder.manifest(attributes["map"])

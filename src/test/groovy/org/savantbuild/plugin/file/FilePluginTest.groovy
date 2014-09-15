@@ -67,7 +67,7 @@ class FilePluginTest {
     project.group = "org.savantbuild.test"
     project.name = "file-plugin-test"
     project.version = new Version("1.0")
-    project.license = License.Apachev2
+    project.licenses.put(License.ApacheV2_0, null)
 
     plugin = new FilePlugin(project, new RuntimeConfiguration(), output)
   }
