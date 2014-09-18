@@ -64,6 +64,6 @@ abstract class BaseFileDelegate {
       GroovyTools.convertListItems(excludePatterns, Pattern.class, { value -> Pattern.compile(value.toString()) } as Function<Object, Pattern>)
     }
 
-    return new ArchiveFileSet(dir, attributes["prefix"], includePatterns, excludePatterns)
+    return new ArchiveFileSet(dir, attributes["prefix"], attributes["mode"], includePatterns, excludePatterns)
   }
 }

@@ -27,7 +27,8 @@ import org.savantbuild.runtime.BuildFailureException
 class CopyDelegate extends BaseFileDelegate {
   public static final String ERROR_MESSAGE = "The file plugin copy method must be called like this:\n\n" +
       "  file.copy(to: \"some dir\") {\n" +
-      "    fileSet(dir: \"some other dir\")" +
+      "    fileSet(dir: \"some other dir\")\n" +
+      "    filter(token: \"%TOKEN%\", value: \"value\")\n" +
       "  }"
 
   public final Copier copier
@@ -59,6 +60,25 @@ class CopyDelegate extends BaseFileDelegate {
     }
 
     copier.fileSet(toFileSet(attributes))
+    return copier
+  }
+
+  /**
+   * Adds a filter:
+   *
+   * <pre>
+   *   filter(token: "%TOKEN%", value: "value")
+   * </pre>
+   *
+   * @param attributes The named attributes (token and value are required).
+   * @return The Copier.
+   */
+  Copier filter(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["token", "value"], ["token", "value"], [:])) {
+      throw new BuildFailureException(ERROR_MESSAGE)
+    }
+
+    copier.filter(attributes["token"].toString(), attributes["value"].toString())
     return copier
   }
 

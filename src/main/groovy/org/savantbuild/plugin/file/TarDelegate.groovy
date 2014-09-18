@@ -62,13 +62,15 @@ class TarDelegate extends BaseFileDelegate {
    * </pre>
    *
    * @param attributes The named attributes (dir is required).
+   * @return The TarBuilder.
    */
-  void fileSet(Map<String, Object> attributes) {
+  TarBuilder fileSet(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
     builder.fileSet(toFileSet(attributes))
+    return builder
   }
 
   /**
@@ -79,13 +81,15 @@ class TarDelegate extends BaseFileDelegate {
    * </pre>
    *
    * @param attributes The named attributes (dir is required).
+   * @return The TarBuilder.
    */
-  void optionalFileSet(Map<String, Object> attributes) {
+  TarBuilder optionalFileSet(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
     builder.optionalFileSet(toFileSet(attributes))
+    return builder
   }
 
   /**
@@ -96,12 +100,14 @@ class TarDelegate extends BaseFileDelegate {
    * </pre>
    *
    * @param attributes The named attributes (dir is required).
+   * @return The TarBuilder.
    */
-  void tarFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix", "includePatterns", "excludePatterns"], ["dir", "prefix"], ["prefix": String.class, "includePatterns": List.class, "excludePatterns": List.class])) {
+  TarBuilder tarFileSet(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix", "mode", "includePatterns", "excludePatterns"], ["dir", "prefix"], ["prefix": String.class, "mode": Integer.class, "includePatterns": List.class, "excludePatterns": List.class])) {
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
     builder.fileSet(toArchiveFileSet(attributes))
+    return builder
   }
 }

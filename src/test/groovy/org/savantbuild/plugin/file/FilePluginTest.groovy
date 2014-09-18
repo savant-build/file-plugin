@@ -266,6 +266,18 @@ class FilePluginTest {
     assertZipFileEquals(projectDir.resolve("build/test/zip/test.zip"), "org/savantbuild/plugin/file/FilePlugin.class", projectDir.resolve("build/classes/main/org/savantbuild/plugin/file/FilePlugin.class"))
   }
 
+  @Test
+  public void zipWithExcludeAndPrefixes() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/zip"))
+    plugin.zip(file: "build/test/zip/test.zip") {
+      zipFileSet(dir: "src", prefix: "foobar", excludePatterns: [/.*\/file\/Copy.*/, /test\/.*/])
+    }
+
+    assertZipContains(projectDir.resolve("build/test/zip/test.zip"), "foobar/main/groovy/org/savantbuild/plugin/file/FilePlugin.groovy")
+    assertZipNotContains(projectDir.resolve("build/test/zip/test.zip"), "foobar/main/groovy/org/savantbuild/plugin/file/CopyDelegate.groovy", "foobar/test/groovy/org/savantbuild/plugin/file/FilePluginTest.groovy")
+    assertZipFileEquals(projectDir.resolve("build/test/zip/test.zip"), "foobar/main/groovy/org/savantbuild/plugin/file/FilePlugin.groovy", projectDir.resolve("src/main/groovy/org/savantbuild/plugin/file/FilePlugin.groovy"))
+  }
+
   private static void assertJarContains(Path jarFile, String... entries) {
     JarFile jf = new JarFile(jarFile.toFile())
     entries.each({ entry -> assertNotNull(jf.getEntry(entry), "Jar [${jarFile}] is missing entry [${entry}]") })
@@ -313,6 +325,12 @@ class FilePluginTest {
     jf.close()
   }
 
+  private static void assertZipNotContains(Path zipFile, String... entries) {
+    ZipFile jf = new ZipFile(zipFile.toFile())
+    entries.each({ entry -> assertNull(jf.getEntry(entry), "Zip [${zipFile}] is contains entry [${entry}] and shouldn't") })
+    jf.close()
+  }
+
   private static void assertZipFileEquals(Path zipFile, String entry, Path original) throws IOException {
     ZipInputStream jis = new ZipInputStream(Files.newInputStream(zipFile))
     ZipEntry zipEntry = jis.getNextEntry()
@@ -333,7 +351,6 @@ class FilePluginTest {
 
     assertEquals(Files.readAllBytes(original), baos.toByteArray())
     assertEquals(zipEntry.getSize(), Files.size(original))
-    assertEquals(zipEntry.getCreationTime(), Files.getAttribute(original, "creationTime"))
     jis.close()
   }
 }

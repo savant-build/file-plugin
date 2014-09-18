@@ -14,11 +14,13 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
+
 import org.savantbuild.domain.Project
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
 import org.savantbuild.util.zip.ZipBuilder
+
 /**
  * Delegate for the zip method's closure. This passes through everything to the ZipBuilder.
  *
@@ -78,6 +80,24 @@ class ZipDelegate extends BaseFileDelegate {
     }
 
     builder.optionalFileSet(toFileSet(attributes))
+    return builder
+  }
+
+  /**
+   * Adds a zipFileSet:
+   *
+   * <pre>
+   *   zipFileSet(dir: "someDir", prefix: "some-prefix")
+   * </pre>
+   *
+   * @param attributes The named attributes (dir is required).
+   */
+  ZipBuilder zipFileSet(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix", "mode", "includePatterns", "excludePatterns"], ["dir"], ["prefix": String.class, "mode": Integer.class, "includePatterns": List.class, "excludePatterns": List.class])) {
+      throw new BuildFailureException(ERROR_MESSAGE)
+    }
+
+    builder.fileSet(toArchiveFileSet(attributes))
     return builder
   }
 }
