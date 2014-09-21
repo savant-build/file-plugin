@@ -270,7 +270,7 @@ class FilePluginTest {
   public void zipWithExcludeAndPrefixes() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/zip"))
     plugin.zip(file: "build/test/zip/test.zip") {
-      zipFileSet(dir: "src", prefix: "foobar", excludePatterns: [/.*\/file\/Copy.*/, /test\/.*/])
+      zipFileSet(dir: "src", prefix: "foobar", excludePatterns: [~/.*\/file\/Copy.*/, ~/test\/.*/])
     }
 
     assertZipContains(projectDir.resolve("build/test/zip/test.zip"), "foobar/main/groovy/org/savantbuild/plugin/file/FilePlugin.groovy")

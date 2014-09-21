@@ -28,7 +28,7 @@ import org.savantbuild.util.tar.TarBuilder
  */
 class TarDelegate extends BaseFileDelegate {
   public static final String ERROR_MESSAGE = "The file plugin tar method must be called like this:\n\n" +
-      "  file.tar(file: \"file.tar.gz\", compress: true, storeGroup: true, storeOwner: true) {\n" +
+      "  file.tar(file: \"file.tar.gz\", compress: true, storeGroupName: true, storeUserName: true) {\n" +
       "    fileSet(dir: \"some other dir\")\n" +
       "    tarFileSet(dir: \"some other dir\", prefix: \"some-prefix\")\n" +
       "  }"
@@ -46,11 +46,11 @@ class TarDelegate extends BaseFileDelegate {
     if (attributes["compress"]) {
       this.builder.compress = attributes["compress"]
     }
-    if (attributes["storeGroup"]) {
-      this.builder.storeGroup = attributes["storeGroup"]
+    if (attributes["storeGroupName"]) {
+      this.builder.storeGroupName = attributes["storeGroupName"]
     }
-    if (attributes["storeOwner"]) {
-      this.builder.storeOwner = attributes["storeOwner"]
+    if (attributes["storeUserName"]) {
+      this.builder.storeUserName = attributes["storeUserName"]
     }
   }
 
