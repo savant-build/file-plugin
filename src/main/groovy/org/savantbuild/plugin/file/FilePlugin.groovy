@@ -22,11 +22,14 @@ import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.plugin.groovy.BaseGroovyPlugin
 import org.savantbuild.runtime.BuildFailureException
 import org.savantbuild.runtime.RuntimeConfiguration
+import org.savantbuild.util.jar.JarTools
 import org.savantbuild.util.tar.TarTools
 import org.savantbuild.util.zip.ZipTools
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+import java.nio.file.StandardOpenOption
 
 /**
  * File plugin.
@@ -37,6 +40,37 @@ class FilePlugin extends BaseGroovyPlugin {
 
   FilePlugin(Project project, RuntimeConfiguration runtimeConfiguration, Output output) {
     super(project, runtimeConfiguration, output)
+  }
+
+  /**
+   * Appends one or more files to a file. The "to" attribute specifies the target file and the "files" attribute is an
+   * array of files to append to it.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.append(to: "build/somefile.txt", files: ["another-file1.txt", "another-file2.txt"])
+   * </pre>
+   *
+   * @param attributes The named attributes (to and files are required).
+   */
+  void append(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["to", "files"], ["to", "files"], ["files": List.class])) {
+      fail("You must supply a [to] attribute and [files] attribute to the append method. Like this:\n\n" +
+          "  file.append(to: \"build/somefile.txt\", files: [\"another-file1.txt\", \"another-file2.txt\"])");
+    }
+
+    Path to = project.directory.resolve(FileTools.toPath(attributes["to"]))
+    if (Files.notExists(to)) {
+      fail("The target file [${to}] doesn't exist.")
+    }
+
+    List<Path> files = new ArrayList<>()
+    attributes["files"].each { file -> files.add(project.directory.resolve(FileTools.toPath(file))) }
+
+    Files.newOutputStream(to, StandardOpenOption.APPEND, StandardOpenOption.WRITE).withStream { os ->
+      files.each { file -> Files.copy(file, os) }
+    }
   }
 
   /**
@@ -55,7 +89,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @return The number of files copied.
    */
   int copy(Map<String, Object> attributes, Closure closure) {
-    def delegate = new CopyDelegate(attributes, project)
+    def delegate = new CopyDelegate(project, attributes)
     closure.delegate = delegate
     try {
       closure()
@@ -68,6 +102,29 @@ class FilePlugin extends BaseGroovyPlugin {
       fail(e.getMessage())
       return 0
     }
+  }
+
+  /**
+   * Copies a single file to another location.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.copyFile(file: "some-file.txt", to: "build/some-file-renamed.txt")
+   * </pre>
+   *
+   * @param attributes The named attributes (file and to are required).
+   */
+  void copyFile(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["to", "file"], ["to", "file"], [:])) {
+      fail("You must supply the [file] and [to] attributes like this:\n\n" +
+          "  file.copyFile(file: \"some-file.txt\", to: \"build/some-file-renamed.txt\")")
+    }
+
+    Path source = project.directory.resolve(FileTools.toPath(attributes["file"]))
+    Path target = project.directory.resolve(FileTools.toPath(attributes["to"]))
+    Files.createDirectories(target.getParent())
+    Files.copy(source, target, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING)
   }
 
   /**
@@ -86,7 +143,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @return The number of files added to the Jar.
    */
   int jar(Map<String, Object> attributes, Closure closure) {
-    def delegate = new JarDelegate(attributes, project)
+    def delegate = new JarDelegate(project, attributes)
     closure.delegate = delegate
     try {
       closure()
@@ -143,6 +200,34 @@ class FilePlugin extends BaseGroovyPlugin {
   }
 
   /**
+   * Renames the files specified by one or more fileSets using the filter specified.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.rename {
+   *     fileSet(dir: "build/classes/main")
+   *     filter(token: "foobar", value: "baz")
+   *   }
+   * </pre>
+   *
+   * @param closure The closure
+   */
+  void rename(Closure closure) {
+    RenameDelegate renameDelegate = new RenameDelegate(project)
+    closure.delegate = renameDelegate
+    closure()
+
+    try {
+      int count = renameDelegate.rename()
+      output.info("Renamed [%d] files", count)
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
+    }
+  }
+
+  /**
    * Creates a symbol link at the [link] attribute that points to the [target] attribute.
    * <p>
    * Here is an example of calling this method:
@@ -192,7 +277,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @return The number of files added to the Tarball.
    */
   int tar(Map<String, Object> attributes, Closure closure) {
-    def delegate = new TarDelegate(attributes, project)
+    def delegate = new TarDelegate(project, attributes)
     closure.delegate = delegate
     try {
       closure()
@@ -204,6 +289,40 @@ class FilePlugin extends BaseGroovyPlugin {
       output.debug(e)
       fail(e.getMessage())
       return 0
+    }
+  }
+
+  /**
+   * Unzips a JAR file to a directory. This requires the [file] and [to] attributes.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.unjar(file: "build/zips/foobar.jar", to: "build/output")
+   * </pre>
+   *
+   * @param attributes The named attributes (file is required).
+   * @param closure The closure that is invoked.
+   */
+  void unjar(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["file", "to"], ["file", "to"], [:])) {
+      fail("You must supply a [file] and [to] attribute like this:\n" +
+          "  file.unjar(file: \"foo.jar\", to: \"some-dir\")")
+    }
+
+    Path file = project.directory.resolve(FileTools.toPath(attributes["file"]))
+    Path to = project.directory.resolve(FileTools.toPath(attributes["to"]))
+
+    if (!Files.isRegularFile(file)) {
+      fail("Zip file [${file}] does not exist")
+    }
+
+    try {
+      output.info("Unjarring [${file}] to [${to}]")
+      JarTools.unjar(file, to)
+    } catch (IOException e) {
+      output.debug(e)
+      fail(e.getMessage())
     }
   }
 
@@ -293,7 +412,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @return The number of files added to the ZIP.
    */
   int zip(Map<String, Object> attributes, Closure closure) {
-    def delegate = new ZipDelegate(attributes, project)
+    def delegate = new ZipDelegate(project, attributes)
     closure.delegate = delegate
     try {
       closure()

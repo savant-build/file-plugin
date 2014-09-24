@@ -33,7 +33,7 @@ class CopyDelegate extends BaseFileDelegate {
 
   public final Copier copier
 
-  CopyDelegate(Map<String, Object> attributes, Project project) {
+  CopyDelegate(Project project, Map<String, Object> attributes) {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["to"], ["to"], [:])) {

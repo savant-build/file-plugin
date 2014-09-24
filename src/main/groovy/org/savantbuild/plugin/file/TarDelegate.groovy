@@ -16,6 +16,7 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
+import org.savantbuild.io.Directory
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
@@ -35,7 +36,7 @@ class TarDelegate extends BaseFileDelegate {
 
   public final TarBuilder builder
 
-  TarDelegate(Map<String, Object> attributes, Project project) {
+  TarDelegate(Project project, Map<String, Object> attributes) {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["file", "compress"], ["file"], ["compress": Boolean.class])) {
@@ -52,6 +53,25 @@ class TarDelegate extends BaseFileDelegate {
     if (attributes["storeUserName"]) {
       this.builder.storeUserName = attributes["storeUserName"]
     }
+  }
+
+  /**
+   * Adds a directory to the TAR file:
+   * <p>
+   * <pre>
+   *   directory(name: "someDir", mode: 0x755, userName: "root", groupName: "root")
+   * </pre>
+   *
+   * @param attributes The named attributes (name is required).
+   */
+  TarBuilder directory(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["name", "mode", "userName", "groupName"], ["name"], ["name": String.class, "mode": Integer.class, "userName": String.class, "groupName": String.class])) {
+      throw new BuildFailureException(ERROR_MESSAGE)
+    }
+
+    Directory directory = new Directory(attributes["name"], attributes["mode"], attributes["userName"], attributes["groupName"])
+    builder.directory(directory)
+    return builder
   }
 
   /**

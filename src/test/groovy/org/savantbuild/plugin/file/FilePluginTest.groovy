@@ -73,6 +73,17 @@ class FilePluginTest {
   }
 
   @Test
+  public void append() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/append"))
+    Files.createDirectories(projectDir.resolve("build/test/append"))
+    Files.createFile(projectDir.resolve("build/test/append/target.txt"))
+    plugin.append(to: "build/test/append/target.txt", files: ["src/test/resources/append1.txt", "src/test/resources/append2.txt"])
+
+    byte[] buf = Files.readAllBytes(projectDir.resolve("build/test/append/target.txt"))
+    assertEquals(new String(buf), "one\ntwo\n")
+  }
+
+  @Test
   public void copyDirectoryToDirectoryWithPaths() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copy(to: Paths.get("build/test/copy")) {
@@ -100,6 +111,16 @@ class FilePluginTest {
     }
 
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/copy/org/savantbuild/plugin/file/FilePlugin.groovy")))
+  }
+
+  @Test
+  public void copyFile() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test/copy"))
+    plugin.copyFile(file: "src/test/resources/append1.txt", to: "build/test/copy/copy-file.txt")
+    assertEquals(new String(Files.readAllBytes(projectDir.resolve("build/test/copy/copy-file.txt"))), "one\n")
+
+    plugin.copyFile(file: "src/test/resources/append2.txt", to: "build/test/copy/copy-file.txt")
+    assertEquals(new String(Files.readAllBytes(projectDir.resolve("build/test/copy/copy-file.txt"))), "two\n")
   }
 
   @Test
@@ -171,6 +192,31 @@ class FilePluginTest {
 
     plugin.mkdir(dir: "build/test/dir")
     assertTrue(Files.isDirectory(projectDir.resolve("build/test/dir")))
+  }
+
+  @Test
+  public void rename() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test"))
+    assertFalse(Files.isDirectory(projectDir.resolve("build/test")))
+
+    Files.createDirectories(projectDir.resolve("build/test"))
+    Files.write(projectDir.resolve("build/test/file-3.0-{integration}.txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file2-1.0-{integration}.txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file3-1.0-{integration}.[second].txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file4-1.0.[second].txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file5.txt"), "Some text".getBytes())
+
+    plugin.rename {
+      fileSet(dir: "build/test")
+      filter(token: "-{integration}", value: "")
+      filter(token: ".[second]", value: "")
+    }
+
+    assertFilesContents("build/test/file-3.0.txt", "Some text")
+    assertFilesContents("build/test/file2-1.0.txt", "Some text")
+    assertFilesContents("build/test/file3-1.0.txt", "Some text")
+    assertFilesContents("build/test/file4-1.0.txt", "Some text")
+    assertFilesContents("build/test/file5.txt", "Some text")
   }
 
   @Test
@@ -276,6 +322,24 @@ class FilePluginTest {
     assertZipContains(projectDir.resolve("build/test/zip/test.zip"), "foobar/main/groovy/org/savantbuild/plugin/file/FilePlugin.groovy")
     assertZipNotContains(projectDir.resolve("build/test/zip/test.zip"), "foobar/main/groovy/org/savantbuild/plugin/file/CopyDelegate.groovy", "foobar/test/groovy/org/savantbuild/plugin/file/FilePluginTest.groovy")
     assertZipFileEquals(projectDir.resolve("build/test/zip/test.zip"), "foobar/main/groovy/org/savantbuild/plugin/file/FilePlugin.groovy", projectDir.resolve("src/main/groovy/org/savantbuild/plugin/file/FilePlugin.groovy"))
+  }
+
+  @Test
+  public void unjar() {
+    jarManifestFile()
+    plugin.unjar(file: "build/test/jar/test.jar", to: "build/test/jar/exploded")
+
+    assertFilesEqual("build/test/jar/exploded/org/savantbuild/plugin/file/FilePlugin.class", "build/classes/main/org/savantbuild/plugin/file/FilePlugin.class")
+  }
+
+  private static void assertFilesContents(String fileName, String contents) {
+    assertEquals(new String(Files.readAllBytes(projectDir.resolve(fileName))), contents)
+  }
+
+  private static void assertFilesEqual(String file1, String file2) {
+    String file1Contents = new String(Files.readAllBytes(projectDir.resolve(file1)))
+    String file2Contents = new String(Files.readAllBytes(projectDir.resolve(file2)))
+    assertEquals(file1Contents, file2Contents)
   }
 
   private static void assertJarContains(Path jarFile, String... entries) {

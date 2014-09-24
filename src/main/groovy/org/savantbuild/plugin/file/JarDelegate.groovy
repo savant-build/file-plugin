@@ -16,6 +16,7 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
+import org.savantbuild.io.Directory
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
@@ -30,12 +31,13 @@ class JarDelegate extends BaseFileDelegate {
   public static final String ERROR_MESSAGE = "The file plugin jar method must be called like this:\n\n" +
       "  file.jar(file: \"file.jar\") {\n" +
       "    fileSet(dir: \"some other dir\")\n" +
+      "    directory(name: \"some dir\")\n" +
       "    manifest(file: \"some file\")\n" +
       "  }"
 
   public final JarBuilder builder
 
-  JarDelegate(Map<String, Object> attributes, Project project) {
+  JarDelegate(Project project, Map<String, Object> attributes) {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["file"], ["file"], [:])) {
@@ -44,6 +46,25 @@ class JarDelegate extends BaseFileDelegate {
 
     def file = FileTools.toPath(attributes["file"])
     this.builder = new JarBuilder(project.directory.resolve(file))
+  }
+
+  /**
+   * Adds a directory to the JAR file:
+   * <p>
+   * <pre>
+   *   directory(name: "someDir")
+   * </pre>
+   *
+   * @param attributes The named attributes (name is required).
+   */
+  JarBuilder directory(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["name"], ["name"], ["name": String.class])) {
+      throw new BuildFailureException(ERROR_MESSAGE)
+    }
+
+    Directory directory = new Directory(attributes["name"], null, null, null)
+    builder.directory(directory)
+    return builder
   }
 
   /**

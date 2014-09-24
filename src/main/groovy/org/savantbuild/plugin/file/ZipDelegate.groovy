@@ -16,6 +16,7 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
+import org.savantbuild.io.Directory
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
@@ -30,11 +31,12 @@ class ZipDelegate extends BaseFileDelegate {
   public static final String ERROR_MESSAGE = "The file plugin zip method must be called like this:\n\n" +
       "  file.zip(file: \"file.zip\") {\n" +
       "    fileSet(dir: \"some other dir\")\n" +
+      "    directory(name: \"some other dir\", mode: 0x755)\n" +
       "  }"
 
   public final ZipBuilder builder
 
-  ZipDelegate(Map<String, Object> attributes, Project project) {
+  ZipDelegate(Project project, Map<String, Object> attributes) {
     super(project)
 
     if (!GroovyTools.attributesValid(attributes, ["file"], ["file"], [:])) {
@@ -43,6 +45,25 @@ class ZipDelegate extends BaseFileDelegate {
 
     def file = FileTools.toPath(attributes["file"])
     this.builder = new ZipBuilder(project.directory.resolve(file))
+  }
+
+  /**
+   * Adds a directory to the ZIP file:
+   * <p>
+   * <pre>
+   *   directory(name: "someDir", mode: 0x755)
+   * </pre>
+   *
+   * @param attributes The named attributes (name is required).
+   */
+  ZipBuilder directory(Map<String, Object> attributes) {
+    if (!GroovyTools.attributesValid(attributes, ["name", "mode"], ["name"], ["name": String.class, "mode": Integer.class])) {
+      throw new BuildFailureException(ERROR_MESSAGE)
+    }
+
+    Directory directory = new Directory(attributes["name"], attributes["mode"], null, null)
+    builder.directory(directory)
+    return builder
   }
 
   /**
