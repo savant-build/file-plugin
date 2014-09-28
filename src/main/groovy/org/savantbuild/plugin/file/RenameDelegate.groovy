@@ -82,8 +82,6 @@ class RenameDelegate extends BaseFileDelegate {
    */
   void filter(Map<String, Object> attributes) {
     if (!GroovyTools.attributesValid(attributes, ["token", "value"], ["token", "value"], [:])) {
-      println "Has token attribute ${GroovyTools.hasAttributes(attributes, ["token"])}"
-      println "Has value attributes ${GroovyTools.hasAttributes(attributes, ["value"])}"
       throw new BuildFailureException(ERROR_MESSAGE)
     }
 
