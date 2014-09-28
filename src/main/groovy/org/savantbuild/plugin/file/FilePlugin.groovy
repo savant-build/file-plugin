@@ -14,7 +14,6 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
-
 import org.savantbuild.domain.Project
 import org.savantbuild.io.FileTools
 import org.savantbuild.output.Output
@@ -29,8 +28,6 @@ import org.savantbuild.util.zip.ZipTools
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
-
 /**
  * File plugin.
  *
@@ -54,23 +51,13 @@ class FilePlugin extends BaseGroovyPlugin {
    *
    * @param attributes The named attributes (to and files are required).
    */
-  void append(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["to", "files"], ["to", "files"], ["files": List.class])) {
-      fail("You must supply a [to] attribute and [files] attribute to the append method. Like this:\n\n" +
-          "  file.append(to: \"build/somefile.txt\", files: [\"another-file1.txt\", \"another-file2.txt\"])");
-    }
+  void append(Map<String, Object> attributes, Closure closure) {
+    AppendDelegate delegate = new AppendDelegate(project, attributes)
+    closure.delegate = delegate
+    closure()
 
-    Path to = project.directory.resolve(FileTools.toPath(attributes["to"]))
-    if (Files.notExists(to)) {
-      fail("The target file [${to}] doesn't exist.")
-    }
-
-    List<Path> files = new ArrayList<>()
-    attributes["files"].each { file -> files.add(project.directory.resolve(FileTools.toPath(file))) }
-
-    Files.newOutputStream(to, StandardOpenOption.APPEND, StandardOpenOption.WRITE).withStream { os ->
-      files.each { file -> Files.copy(file, os) }
-    }
+    int count = delegate.append()
+    output.info("Appended [%d] files to [%s]", count, attributes["to"])
   }
 
   /**
@@ -125,6 +112,26 @@ class FilePlugin extends BaseGroovyPlugin {
     Path target = project.directory.resolve(FileTools.toPath(attributes["to"]))
     Files.createDirectories(target.getParent())
     Files.copy(source, target, StandardCopyOption.COPY_ATTRIBUTES, StandardCopyOption.REPLACE_EXISTING)
+  }
+
+  /**
+   * Deletes files using fileSets.
+   * <p>
+   * Here is an example of calling this method:
+   * <p>
+   * <pre>
+   *   file.delete {
+   *     fileSet(dir: "build/example", includePatterns: [~/foobar.+/])
+   *   }
+   * </pre>
+   */
+  void delete(Closure closure) {
+    DeleteDelegate delegate = new DeleteDelegate(project)
+    closure.delegate = delegate
+    closure()
+
+    int count = delegate.delete()
+    output.info("Deleted [%d] files", count)
   }
 
   /**

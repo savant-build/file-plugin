@@ -75,9 +75,9 @@ class FilePluginTest {
   @Test
   public void append() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/append"))
-    Files.createDirectories(projectDir.resolve("build/test/append"))
-    Files.createFile(projectDir.resolve("build/test/append/target.txt"))
-    plugin.append(to: "build/test/append/target.txt", files: ["src/test/resources/append1.txt", "src/test/resources/append2.txt"])
+    plugin.append(to: "build/test/append/target.txt") {
+      fileSet(dir: "src/test/resources", includePatterns: [~/.+\.txt/])
+    }
 
     byte[] buf = Files.readAllBytes(projectDir.resolve("build/test/append/target.txt"))
     assertEquals(new String(buf), "one\ntwo\n")
@@ -121,6 +121,29 @@ class FilePluginTest {
 
     plugin.copyFile(file: "src/test/resources/append2.txt", to: "build/test/copy/copy-file.txt")
     assertEquals(new String(Files.readAllBytes(projectDir.resolve("build/test/copy/copy-file.txt"))), "two\n")
+  }
+
+  @Test
+  public void delete() throws Exception {
+    FileTools.prune(projectDir.resolve("build/test"))
+    assertFalse(Files.isDirectory(projectDir.resolve("build/test")))
+
+    Files.createDirectories(projectDir.resolve("build/test"))
+    Files.write(projectDir.resolve("build/test/file-3.0-{integration}.txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file2-1.0-{integration}.txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file3-1.0-{integration}.[second].txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file4-1.0.[second].txt"), "Some text".getBytes())
+    Files.write(projectDir.resolve("build/test/file5.txt"), "Some text".getBytes())
+
+    plugin.delete{
+      fileSet(dir: "build/test", includePatterns: [~/.+\{integration}\.+/, ~/.+\[second].+/])
+    }
+
+    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/file-3.0-{integration}.txt")))
+    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/file2-1.0-{integration}.txt")))
+    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/file3-1.0-{integration}.[second].txt")))
+    assertFalse(Files.isRegularFile(projectDir.resolve("build/test/file4-1.0.[second].txt")))
+    assertTrue(Files.isRegularFile(projectDir.resolve("build/test/file5.txt")))
   }
 
   @Test
