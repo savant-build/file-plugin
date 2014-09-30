@@ -46,7 +46,9 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.append(to: "build/somefile.txt", files: ["another-file1.txt", "another-file2.txt"])
+   *   file.append(to: "build/somefile.txt") {
+   *     fileSet(dir: "foo")
+   *   }
    * </pre>
    *
    * @param attributes The named attributes (to and files are required).
