@@ -15,55 +15,87 @@
  */
 package org.savantbuild.plugin.file
 
+import java.nio.file.Files
+import java.nio.file.Path
+
 import org.savantbuild.domain.Project
 import org.savantbuild.io.ArchiveFileSet
+import org.savantbuild.io.Directory
 import org.savantbuild.io.FileSet
 import org.savantbuild.io.FileTools
-import org.savantbuild.parser.groovy.GroovyTools
-
-import java.nio.file.Path
-import java.util.function.Function
-import java.util.regex.Pattern
+import org.savantbuild.runtime.BuildFailureException
 
 /**
- * Base class for delegates that work on files.
+ * Base class.
  *
  * @author Brian Pontarelli
  */
-abstract class BaseFileDelegate {
+class BaseFileDelegate {
   protected final Project project
 
   BaseFileDelegate(Project project) {
     this.project = project
   }
 
-  FileSet toFileSet(Map<String, Object> attributes) {
+  protected ArchiveFileSet toArchiveFileSet(Map<String, Object> attributes) {
+    String error = ArchiveFileSet.afsAttributesValid(attributes)
+    if (error != null) {
+      throw new BuildFailureException(error)
+    }
+
     Path dir = project.directory.resolve(FileTools.toPath(attributes["dir"]))
-    List includePatterns = attributes["includePatterns"]
-    if (includePatterns != null) {
-      GroovyTools.convertListItems(includePatterns, Pattern.class, { value -> Pattern.compile(value.toString()) } as Function<Object, Pattern>)
+    FileSet fileSet = ArchiveFileSet.fromAttributes(dir, attributes)
+    if (Files.isRegularFile(fileSet.directory)) {
+      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] is a file and must be a directory");
     }
 
-    List excludePatterns = attributes["excludePatterns"]
-    if (excludePatterns != null) {
-      GroovyTools.convertListItems(excludePatterns, Pattern.class, { value -> Pattern.compile(value.toString()) } as Function<Object, Pattern>)
+    if (!Files.isDirectory(fileSet.directory)) {
+      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] does not exist");
     }
 
-    return new FileSet(dir, includePatterns, excludePatterns)
+    return fileSet
   }
 
-  FileSet toArchiveFileSet(Map<String, Object> attributes) {
+  protected Directory toDirectory(Map<String, Object> attributes) {
+    String error = Directory.attributesValid(attributes)
+    if (error != null) {
+      throw new BuildFailureException(error)
+    }
+
+    return Directory.fromAttributes(attributes)
+  }
+
+  protected FileSet toFileSet(Map<String, Object> attributes) {
+    String error = FileSet.attributesValid(attributes)
+    if (error != null) {
+      throw new BuildFailureException(error)
+    }
+
     Path dir = project.directory.resolve(FileTools.toPath(attributes["dir"]))
-    List includePatterns = attributes["includePatterns"]
-    if (includePatterns != null) {
-      GroovyTools.convertListItems(includePatterns, Pattern.class, { value -> Pattern.compile(value.toString()) } as Function<Object, Pattern>)
+    FileSet fileSet = FileSet.fromAttributes(dir, attributes)
+    if (Files.isRegularFile(fileSet.directory)) {
+      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] is a file and must be a directory");
     }
 
-    List excludePatterns = attributes["excludePatterns"]
-    if (excludePatterns != null) {
-      GroovyTools.convertListItems(excludePatterns, Pattern.class, { value -> Pattern.compile(value.toString()) } as Function<Object, Pattern>)
+    if (!Files.isDirectory(fileSet.directory)) {
+      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] does not exist");
     }
 
-    return new ArchiveFileSet(dir, attributes["prefix"], attributes["mode"], attributes["userName"], attributes["groupName"], includePatterns, excludePatterns)
+    return fileSet
+  }
+
+  protected FileSet toOptionalFileSet(Map<String, Object> attributes) {
+    String error = FileSet.attributesValid(attributes)
+    if (error != null) {
+      throw new BuildFailureException(error)
+    }
+
+    Path dir = project.directory.resolve(FileTools.toPath(attributes["dir"]))
+    FileSet fileSet = FileSet.fromAttributes(dir, attributes)
+    if (Files.isRegularFile(fileSet.directory)) {
+      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] is a file and must be a directory");
+    }
+
+    return fileSet
   }
 }

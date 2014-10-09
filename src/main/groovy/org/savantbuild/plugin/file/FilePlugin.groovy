@@ -14,20 +14,22 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
+
 import org.savantbuild.domain.Project
 import org.savantbuild.io.FileTools
+import org.savantbuild.io.jar.JarTools
+import org.savantbuild.io.tar.TarTools
+import org.savantbuild.io.zip.ZipTools
 import org.savantbuild.output.Output
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.plugin.groovy.BaseGroovyPlugin
 import org.savantbuild.runtime.BuildFailureException
 import org.savantbuild.runtime.RuntimeConfiguration
-import org.savantbuild.util.jar.JarTools
-import org.savantbuild.util.tar.TarTools
-import org.savantbuild.util.zip.ZipTools
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 /**
  * File plugin.
  *
@@ -46,10 +48,8 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.append(to: "build/somefile.txt") {
-   *     fileSet(dir: "foo")
-   *   }
-   * </pre>
+   *   file.append(to: "build/somefile.txt") {*     fileSet(dir: "foo")
+   *}* </pre>
    *
    * @param attributes The named attributes (to and files are required).
    */
@@ -68,10 +68,8 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.copy(to: "build/distributions/bin") {
-   *     fileSet(dir: "src/main/scripts")
-   *   }
-   * </pre>
+   *   file.copy(to: "build/distributions/bin") {*     fileSet(dir: "src/main/scripts")
+   *}* </pre>
    *
    * @param attributes The named attributes (to is required).
    * @param closure The closure that is invoked.
@@ -122,10 +120,8 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.delete {
-   *     fileSet(dir: "build/example", includePatterns: [~/foobar.+/])
-   *   }
-   * </pre>
+   *   file.delete {*     fileSet(dir: "build/example", includePatterns: [~/foobar.+/])
+   *}* </pre>
    */
   void delete(Closure closure) {
     DeleteDelegate delegate = new DeleteDelegate(project)
@@ -142,10 +138,8 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.jar(file: "build/jars/foo.jar") {
-   *     fileSet(dir: "build/classes/main")
-   *   }
-   * </pre>
+   *   file.jar(file: "build/jars/foo.jar") {*     fileSet(dir: "build/classes/main")
+   *}* </pre>
    *
    * @param attributes The named attributes (file is required).
    * @param closure The closure that is invoked.
@@ -214,11 +208,9 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.rename {
-   *     fileSet(dir: "build/classes/main")
+   *   file.rename {*     fileSet(dir: "build/classes/main")
    *     filter(token: "foobar", value: "baz")
-   *   }
-   * </pre>
+   *}* </pre>
    *
    * @param closure The closure
    */
@@ -276,10 +268,8 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.tar(file: "build/tars/foobar.tar.gz") {
-   *     fileSet(dir: "src/main/java")
-   *   }
-   * </pre>
+   *   file.tar(file: "build/tars/foobar.tar.gz") {*     fileSet(dir: "src/main/java")
+   *}* </pre>
    *
    * @param attributes The named attributes (file is required).
    * @param closure The closure that is invoked.
@@ -411,10 +401,8 @@ class FilePlugin extends BaseGroovyPlugin {
    * Here is an example of calling this method:
    * <p>
    * <pre>
-   *   file.zip(file: "build/jars/foo.zip") {
-   *     fileSet(dir: "build/classes/main")
-   *   }
-   * </pre>
+   *   file.zip(file: "build/jars/foo.zip") {*     fileSet(dir: "build/classes/main")
+   *}* </pre>
    *
    * @param attributes The named attributes (file is required).
    * @param closure The closure that is invoked.

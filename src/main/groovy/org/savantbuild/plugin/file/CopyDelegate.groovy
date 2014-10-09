@@ -14,11 +14,13 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
+
 import org.savantbuild.domain.Project
 import org.savantbuild.io.Copier
 import org.savantbuild.io.FileTools
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
+
 /**
  * Delegate for the copy method's closure. This passes through everything to the Copier.
  *
@@ -55,10 +57,6 @@ class CopyDelegate extends BaseFileDelegate {
    * @return The Copier.
    */
   Copier fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
     copier.fileSet(toFileSet(attributes))
     return copier
   }
@@ -93,11 +91,7 @@ class CopyDelegate extends BaseFileDelegate {
    * @return The Copier.
    */
   Copier optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    copier.optionalFileSet(toFileSet(attributes))
+    copier.optionalFileSet(toOptionalFileSet(attributes))
     return copier
   }
 }

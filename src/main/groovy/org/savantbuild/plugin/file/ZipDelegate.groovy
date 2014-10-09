@@ -16,11 +16,10 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
-import org.savantbuild.io.Directory
 import org.savantbuild.io.FileTools
+import org.savantbuild.io.zip.ZipBuilder
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
-import org.savantbuild.util.zip.ZipBuilder
 
 /**
  * Delegate for the zip method's closure. This passes through everything to the ZipBuilder.
@@ -57,12 +56,7 @@ class ZipDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (name is required).
    */
   ZipBuilder directory(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["name", "mode"], ["name"], ["name": String.class, "mode": Integer.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    Directory directory = new Directory(attributes["name"], attributes["mode"], null, null)
-    builder.directory(directory)
+    builder.directory(toDirectory(attributes))
     return builder
   }
 
@@ -77,10 +71,6 @@ class ZipDelegate extends BaseFileDelegate {
    * @return The ZipBuilder.
    */
   ZipBuilder fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
     builder.fileSet(toFileSet(attributes))
     return builder
   }
@@ -96,11 +86,7 @@ class ZipDelegate extends BaseFileDelegate {
    * @return The ZipBuilder.
    */
   ZipBuilder optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    builder.optionalFileSet(toFileSet(attributes))
+    builder.optionalFileSet(toOptionalFileSet(attributes))
     return builder
   }
 
@@ -114,10 +100,6 @@ class ZipDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   ZipBuilder zipFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix", "mode", "includePatterns", "excludePatterns"], ["dir"], ["prefix": String.class, "mode": Integer.class, "includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
     builder.fileSet(toArchiveFileSet(attributes))
     return builder
   }

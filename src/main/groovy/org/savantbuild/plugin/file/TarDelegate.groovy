@@ -16,11 +16,10 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
-import org.savantbuild.io.Directory
 import org.savantbuild.io.FileTools
+import org.savantbuild.io.tar.TarBuilder
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
-import org.savantbuild.util.tar.TarBuilder
 
 /**
  * Delegate for the tar method's closure. This does all the work of building Tarfiles.
@@ -65,12 +64,7 @@ class TarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (name is required).
    */
   TarBuilder directory(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["name", "mode", "userName", "groupName"], ["name"], ["name": String.class, "mode": Integer.class, "userName": String.class, "groupName": String.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    Directory directory = new Directory(attributes["name"], attributes["mode"], attributes["userName"], attributes["groupName"])
-    builder.directory(directory)
+    builder.directory(toDirectory(attributes))
     return builder
   }
 
@@ -85,10 +79,6 @@ class TarDelegate extends BaseFileDelegate {
    * @return The TarBuilder.
    */
   TarBuilder fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
     builder.fileSet(toFileSet(attributes))
     return builder
   }
@@ -104,11 +94,7 @@ class TarDelegate extends BaseFileDelegate {
    * @return The TarBuilder.
    */
   TarBuilder optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    builder.optionalFileSet(toFileSet(attributes))
+    builder.optionalFileSet(toOptionalFileSet(attributes))
     return builder
   }
 
@@ -123,10 +109,6 @@ class TarDelegate extends BaseFileDelegate {
    * @return The TarBuilder.
    */
   TarBuilder tarFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "prefix", "mode", "includePatterns", "excludePatterns"], ["dir", "prefix"], ["prefix": String.class, "mode": Integer.class, "includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
     builder.fileSet(toArchiveFileSet(attributes))
     return builder
   }

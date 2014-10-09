@@ -16,11 +16,10 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.domain.Project
-import org.savantbuild.io.Directory
 import org.savantbuild.io.FileTools
+import org.savantbuild.io.jar.JarBuilder
 import org.savantbuild.parser.groovy.GroovyTools
 import org.savantbuild.runtime.BuildFailureException
-import org.savantbuild.util.jar.JarBuilder
 
 /**
  * Delegate for the jar method's closure. This passes through everything to the JarBuilder.
@@ -58,12 +57,7 @@ class JarDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (name is required).
    */
   JarBuilder directory(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["name"], ["name"], ["name": String.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    Directory directory = new Directory(attributes["name"], null, null, null)
-    builder.directory(directory)
+    builder.directory(toDirectory(attributes))
     return builder
   }
 
@@ -78,10 +72,6 @@ class JarDelegate extends BaseFileDelegate {
    * @return The JarBuilder.
    */
   JarBuilder fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
     builder.fileSet(toFileSet(attributes))
     return builder
   }
@@ -127,11 +117,7 @@ class JarDelegate extends BaseFileDelegate {
    * @return The JarBuilder.
    */
   JarBuilder optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    builder.optionalFileSet(toFileSet(attributes))
+    builder.optionalFileSet(toOptionalFileSet(attributes))
     return builder
   }
 }

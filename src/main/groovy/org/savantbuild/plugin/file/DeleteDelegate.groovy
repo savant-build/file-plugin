@@ -14,12 +14,12 @@
  * language governing permissions and limitations under the License.
  */
 package org.savantbuild.plugin.file
-import org.savantbuild.domain.Project
-import org.savantbuild.io.FileSet
-import org.savantbuild.parser.groovy.GroovyTools
-import org.savantbuild.runtime.BuildFailureException
 
 import java.nio.file.Files
+
+import org.savantbuild.domain.Project
+import org.savantbuild.io.FileSet
+
 /**
  * Delegate for the delete method's closure. This uses FileSets to delete 0 or more files.
  *
@@ -65,20 +65,7 @@ class DeleteDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void fileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    FileSet fileSet = toFileSet(attributes)
-    if (Files.isRegularFile(fileSet.directory)) {
-      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] is a file and must be a directory");
-    }
-
-    if (!Files.isDirectory(fileSet.directory)) {
-      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] does not exist");
-    }
-
-    fileSets.add(fileSet)
+    fileSets.add(toFileSet(attributes))
   }
 
   /**
@@ -91,15 +78,7 @@ class DeleteDelegate extends BaseFileDelegate {
    * @param attributes The named attributes (dir is required).
    */
   void optionalFileSet(Map<String, Object> attributes) {
-    if (!GroovyTools.attributesValid(attributes, ["dir", "includePatterns", "excludePatterns"], ["dir"], ["includePatterns": List.class, "excludePatterns": List.class])) {
-      throw new BuildFailureException(ERROR_MESSAGE)
-    }
-
-    FileSet fileSet = toFileSet(attributes)
-    if (Files.isRegularFile(fileSet.directory)) {
-      throw new IOException("The [fileSet.directory] path [" + fileSet.directory + "] is a file and must be a directory");
-    }
-
+    FileSet fileSet = toOptionalFileSet(attributes)
     if (Files.isDirectory(fileSet.directory)) {
       fileSets.add(fileSet)
     }
