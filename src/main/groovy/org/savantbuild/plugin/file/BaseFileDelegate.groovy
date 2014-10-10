@@ -38,7 +38,7 @@ class BaseFileDelegate {
   }
 
   protected ArchiveFileSet toArchiveFileSet(Map<String, Object> attributes) {
-    String error = ArchiveFileSet.afsAttributesValid(attributes)
+    String error = ArchiveFileSet.attributesValid(attributes)
     if (error != null) {
       throw new BuildFailureException(error)
     }
