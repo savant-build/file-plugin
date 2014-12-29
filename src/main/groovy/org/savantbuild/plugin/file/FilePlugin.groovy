@@ -53,7 +53,7 @@ class FilePlugin extends BaseGroovyPlugin {
    *
    * @param attributes The named attributes (to and files are required).
    */
-  void append(Map<String, Object> attributes, Closure closure) {
+  void append(Map<String, Object> attributes, @DelegatesTo(AppendDelegate.class) Closure closure) {
     AppendDelegate delegate = new AppendDelegate(project, attributes)
     closure.delegate = delegate
     closure()
@@ -75,7 +75,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @param closure The closure that is invoked.
    * @return The number of files copied.
    */
-  int copy(Map<String, Object> attributes, Closure closure) {
+  int copy(Map<String, Object> attributes, @DelegatesTo(CopyDelegate.class) Closure closure) {
     def delegate = new CopyDelegate(project, attributes)
     closure.delegate = delegate
     try {
@@ -123,7 +123,7 @@ class FilePlugin extends BaseGroovyPlugin {
    *   file.delete {*     fileSet(dir: "build/example", includePatterns: [~/foobar.+/])
    *}* </pre>
    */
-  void delete(Closure closure) {
+  void delete(@DelegatesTo(DeleteDelegate.class) Closure closure) {
     DeleteDelegate delegate = new DeleteDelegate(project)
     closure.delegate = delegate
     closure()
@@ -145,7 +145,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @param closure The closure that is invoked.
    * @return The number of files added to the Jar.
    */
-  int jar(Map<String, Object> attributes, Closure closure) {
+  int jar(Map<String, Object> attributes, @DelegatesTo(JarDelegate.class) Closure closure) {
     def delegate = new JarDelegate(project, attributes)
     closure.delegate = delegate
     try {
@@ -214,7 +214,7 @@ class FilePlugin extends BaseGroovyPlugin {
    *
    * @param closure The closure
    */
-  void rename(Closure closure) {
+  void rename(@DelegatesTo(RenameDelegate.class) Closure closure) {
     RenameDelegate renameDelegate = new RenameDelegate(project)
     closure.delegate = renameDelegate
     closure()
@@ -275,7 +275,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @param closure The closure that is invoked.
    * @return The number of files added to the Tarball.
    */
-  int tar(Map<String, Object> attributes, Closure closure) {
+  int tar(Map<String, Object> attributes, @DelegatesTo(TarDelegate.class) Closure closure) {
     def delegate = new TarDelegate(project, attributes)
     closure.delegate = delegate
     try {
@@ -408,7 +408,7 @@ class FilePlugin extends BaseGroovyPlugin {
    * @param closure The closure that is invoked.
    * @return The number of files added to the ZIP.
    */
-  int zip(Map<String, Object> attributes, Closure closure) {
+  int zip(Map<String, Object> attributes, @DelegatesTo(ZipDelegate.class) Closure closure) {
     def delegate = new ZipDelegate(project, attributes)
     closure.delegate = delegate
     try {
