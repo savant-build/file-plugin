@@ -59,7 +59,7 @@ class FilePlugin extends BaseGroovyPlugin {
     closure()
 
     int count = delegate.append()
-    output.info("Appended [%d] files to [%s]", count, attributes["to"])
+    output.infoln("Appended [%d] files to [%s]", count, attributes["to"])
   }
 
   /**
@@ -82,7 +82,7 @@ class FilePlugin extends BaseGroovyPlugin {
       closure()
 
       int count = delegate.copier.copy()
-      output.info("Copied [%d] files to [%s]", count, delegate.copier.to)
+      output.infoln("Copied [%d] files to [%s]", count, delegate.copier.to)
       return count
     } catch (IOException e) {
       output.debug(e)
@@ -129,7 +129,7 @@ class FilePlugin extends BaseGroovyPlugin {
     closure()
 
     int count = delegate.delete()
-    output.info("Deleted [%d] files", count)
+    output.infoln("Deleted [%d] files", count)
   }
 
   /**
@@ -154,7 +154,7 @@ class FilePlugin extends BaseGroovyPlugin {
       delegate.builder.ensureManifest("${project.group}.${project.name}".toString(), project.version.toString())
 
       int count = delegate.builder.build()
-      output.info("Added [%d] files to JAR [%s]", count, delegate.builder.file)
+      output.infoln("Added [%d] files to JAR [%s]", count, delegate.builder.file)
       return count
     } catch (IOException e) {
       output.debug(e)
@@ -221,7 +221,7 @@ class FilePlugin extends BaseGroovyPlugin {
 
     try {
       int count = renameDelegate.rename()
-      output.info("Renamed [%d] files", count)
+      output.infoln("Renamed [%d] files", count)
     } catch (IOException e) {
       output.debug(e)
       fail(e.getMessage())
@@ -282,7 +282,7 @@ class FilePlugin extends BaseGroovyPlugin {
       closure()
 
       int count = delegate.builder.build()
-      output.info("Added [%d] files to TAR [%s]", count, delegate.builder.file)
+      output.infoln("Added [%d] files to TAR [%s]", count, delegate.builder.file)
       return count
     } catch (IOException e) {
       output.debug(e)
@@ -317,7 +317,7 @@ class FilePlugin extends BaseGroovyPlugin {
     }
 
     try {
-      output.info("Unjarring [${file}] to [${to}]")
+      output.infoln("Unjarring [${file}] to [${to}]")
       JarTools.unjar(file, to)
     } catch (IOException e) {
       output.debug(e)
@@ -353,7 +353,7 @@ class FilePlugin extends BaseGroovyPlugin {
     }
 
     try {
-      output.info("Untarring [${file}] to [${to}]")
+      output.infoln("Untarring [${file}] to [${to}]")
       TarTools.untar(file, to, useGroup, useOwner)
     } catch (IOException e) {
       output.debug(e)
@@ -387,7 +387,7 @@ class FilePlugin extends BaseGroovyPlugin {
     }
 
     try {
-      output.info("Unzipping [${file}] to [${to}]")
+      output.infoln("Unzipping [${file}] to [${to}]")
       ZipTools.unzip(file, to)
     } catch (IOException e) {
       output.debug(e)
@@ -415,7 +415,7 @@ class FilePlugin extends BaseGroovyPlugin {
       closure()
 
       int count = delegate.builder.build()
-      output.info("Added [%d] files to ZIP [%s]", count, delegate.builder.file)
+      output.infoln("Added [%d] files to ZIP [%s]", count, delegate.builder.file)
       return count
     } catch (IOException e) {
       output.debug(e)
