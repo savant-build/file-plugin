@@ -58,6 +58,7 @@ class FilePlugin extends BaseGroovyPlugin {
   void append(Map<String, Object> attributes, @DelegatesTo(AppendDelegate.class) Closure closure) {
     AppendDelegate delegate = new AppendDelegate(project, attributes)
     closure.delegate = delegate
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
     closure()
 
     int count = delegate.append()
@@ -80,6 +81,7 @@ class FilePlugin extends BaseGroovyPlugin {
   int copy(Map<String, Object> attributes, @DelegatesTo(CopyDelegate.class) Closure closure) {
     def delegate = new CopyDelegate(project, attributes)
     closure.delegate = delegate
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
     try {
       closure()
 
@@ -128,6 +130,7 @@ class FilePlugin extends BaseGroovyPlugin {
   void delete(@DelegatesTo(DeleteDelegate.class) Closure closure) {
     DeleteDelegate delegate = new DeleteDelegate(project)
     closure.delegate = delegate
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
     closure()
 
     int count = delegate.delete()
@@ -150,6 +153,7 @@ class FilePlugin extends BaseGroovyPlugin {
   int jar(Map<String, Object> attributes, @DelegatesTo(JarDelegate.class) Closure closure) {
     def delegate = new JarDelegate(project, attributes)
     closure.delegate = delegate
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
     try {
       closure()
 
@@ -197,7 +201,7 @@ class FilePlugin extends BaseGroovyPlugin {
 
     Path directory = FileTools.toPath(attributes["dir"])
     try {
-      FileTools.prune(project.directory.resolve(directory));
+      FileTools.prune(project.directory.resolve(directory))
     } catch (IOException e) {
       output.debug(e)
       fail(e.getMessage())
@@ -219,6 +223,7 @@ class FilePlugin extends BaseGroovyPlugin {
   void rename(@DelegatesTo(RenameDelegate.class) Closure closure) {
     RenameDelegate renameDelegate = new RenameDelegate(project)
     closure.delegate = renameDelegate
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
     closure()
 
     try {
@@ -280,6 +285,7 @@ class FilePlugin extends BaseGroovyPlugin {
   int tar(Map<String, Object> attributes, @DelegatesTo(TarDelegate.class) Closure closure) {
     def delegate = new TarDelegate(project, attributes)
     closure.delegate = delegate
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
     try {
       closure()
 
@@ -413,6 +419,7 @@ class FilePlugin extends BaseGroovyPlugin {
   int zip(Map<String, Object> attributes, @DelegatesTo(ZipDelegate.class) Closure closure) {
     def delegate = new ZipDelegate(project, attributes)
     closure.delegate = delegate
+    closure.resolveStrategy = Closure.DELEGATE_FIRST
     try {
       closure()
 
