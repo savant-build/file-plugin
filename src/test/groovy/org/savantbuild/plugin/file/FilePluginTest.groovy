@@ -16,8 +16,8 @@
 package org.savantbuild.plugin.file
 
 import org.savantbuild.dep.domain.License
-import org.savantbuild.dep.domain.Version
 import org.savantbuild.domain.Project
+import org.savantbuild.domain.Version
 import org.savantbuild.io.FileTools
 import org.savantbuild.output.Output
 import org.savantbuild.output.SystemOutOutput
@@ -51,7 +51,7 @@ class FilePluginTest {
   FilePlugin plugin
 
   @BeforeSuite
-  public static void beforeSuite() {
+  static void beforeSuite() {
     projectDir = Paths.get("")
     if (!Files.isRegularFile(projectDir.resolve("LICENSE"))) {
       projectDir = Paths.get("../file-plugin")
@@ -59,7 +59,7 @@ class FilePluginTest {
   }
 
   @BeforeMethod
-  public void beforeMethod() {
+  void beforeMethod() {
     output = new SystemOutOutput(true)
     output.enableDebug()
 
@@ -67,13 +67,13 @@ class FilePluginTest {
     project.group = "org.savantbuild.test"
     project.name = "file-plugin-test"
     project.version = new Version("1.0")
-    project.licenses.put(License.ApacheV2_0, null)
+    project.licenses.add(License.parse("ApacheV2_0", null))
 
     plugin = new FilePlugin(project, new RuntimeConfiguration(), output)
   }
 
   @Test
-  public void append() throws Exception {
+  void append() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/append"))
     plugin.append(to: "build/test/append/target.txt") {
       fileSet(dir: "src/test/resources", includePatterns: [~/.+\.txt/])
@@ -84,7 +84,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void copyDirectoryToDirectoryWithPaths() throws Exception {
+  void copyDirectoryToDirectoryWithPaths() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copy(to: Paths.get("build/test/copy")) {
       fileSet(dir: Paths.get("src/main/groovy"))
@@ -94,7 +94,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void copyWithIncludePatterns() throws Exception {
+  void copyWithIncludePatterns() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copy(to: Paths.get("build/test/copy")) {
       fileSet(dir: Paths.get("src/main/groovy"), includePatterns: [/.*\/file\/.*/])
@@ -104,7 +104,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void copyDirectoryToDirectoryWithStrings() throws Exception {
+  void copyDirectoryToDirectoryWithStrings() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copy(to: "build/test/copy") {
       fileSet(dir: "src/main/groovy")
@@ -114,7 +114,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void copyFile() throws Exception {
+  void copyFile() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/copy"))
     plugin.copyFile(file: "src/test/resources/append1.txt", to: "build/test/copy/copy-file.txt")
     assertEquals(new String(Files.readAllBytes(projectDir.resolve("build/test/copy/copy-file.txt"))), "one\n")
@@ -124,7 +124,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void delete() throws Exception {
+  void delete() throws Exception {
     FileTools.prune(projectDir.resolve("build/test"))
     assertFalse(Files.isDirectory(projectDir.resolve("build/test")))
 
@@ -147,7 +147,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void jarWithPaths() throws Exception {
+  void jarWithPaths() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/jar"))
     plugin.jar(file: Paths.get("build/test/jar/test.jar")) {
       fileSet(dir: Paths.get("build/classes/main"))
@@ -158,7 +158,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void jarWithStrings() throws Exception {
+  void jarWithStrings() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/jar"))
     plugin.jar(file: "build/test/jar/test.jar") {
       fileSet(dir: "build/classes/main")
@@ -169,7 +169,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void jarManifestFile() throws Exception {
+  void jarManifestFile() throws Exception {
     println "Start file"
     FileTools.prune(projectDir.resolve("build/test/jar"))
     plugin.jar(file: "build/test/jar/test.jar") {
@@ -184,7 +184,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void jarManifestMap() throws Exception {
+  void jarManifestMap() throws Exception {
     println "Start map"
     FileTools.prune(projectDir.resolve("build/test/jar"))
     println "Exists ${Files.isRegularFile(projectDir.resolve("build/test/jar/test.jar"))}"
@@ -209,7 +209,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void mkdir() throws Exception {
+  void mkdir() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/dir"))
     assertFalse(Files.isDirectory(projectDir.resolve("build/test/dir")))
 
@@ -218,7 +218,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void rename() throws Exception {
+  void rename() throws Exception {
     FileTools.prune(projectDir.resolve("build/test"))
     assertFalse(Files.isDirectory(projectDir.resolve("build/test")))
 
@@ -243,7 +243,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void symlink() throws Exception {
+  void symlink() throws Exception {
     FileTools.prune(projectDir.resolve("build/test"))
     assertFalse(Files.isDirectory(projectDir.resolve("build/test")))
 
@@ -253,7 +253,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void tarCompressed() throws Exception {
+  void tarCompressed() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/tar"))
     plugin.tar(file: Paths.get("build/test/tar/test.tar.gz"), compress: true) {
       fileSet(dir: Paths.get("build/classes/main"))
@@ -276,7 +276,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void tarWithPaths() throws Exception {
+  void tarWithPaths() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/tar"))
     plugin.tar(file: Paths.get("build/test/tar/test.tar")) {
       fileSet(dir: Paths.get("build/classes/main"))
@@ -297,7 +297,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void tarWithStrings() throws Exception {
+  void tarWithStrings() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/tar"))
     plugin.tar(file: "build/test/tar/test.tar") {
       fileSet(dir: "build/classes/main")
@@ -314,7 +314,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void zipWithPaths() throws Exception {
+  void zipWithPaths() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/zip"))
     plugin.zip(file: Paths.get("build/test/zip/test.zip")) {
       fileSet(dir: Paths.get("build/classes/main"))
@@ -325,7 +325,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void zipWithStrings() throws Exception {
+  void zipWithStrings() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/zip"))
     plugin.zip(file: "build/test/zip/test.zip") {
       fileSet(dir: "build/classes/main")
@@ -336,7 +336,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void zipWithExcludeAndPrefixes() throws Exception {
+  void zipWithExcludeAndPrefixes() throws Exception {
     FileTools.prune(projectDir.resolve("build/test/zip"))
     plugin.zip(file: "build/test/zip/test.zip") {
       zipFileSet(dir: "src", prefix: "foobar", excludePatterns: [~/.*\/file\/Copy.*/, ~/test\/.*/])
@@ -348,7 +348,7 @@ class FilePluginTest {
   }
 
   @Test
-  public void unjar() {
+  void unjar() {
     jarManifestFile()
     plugin.unjar(file: "build/test/jar/test.jar", to: "build/test/jar/exploded")
 
@@ -402,7 +402,7 @@ class FilePluginTest {
     expected.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VERSION, "1.0.0")
     expected.getMainAttributes().put(Attributes.Name.IMPLEMENTATION_VENDOR, "org.savantbuild.test.file-plugin-test")
 
-    assertEquals(actual.getMainAttributes(), expected.getMainAttributes(), "Actual " + actual.getMainAttributes() + " expected " + expected.getMainAttributes());
+    assertEquals(actual.getMainAttributes(), expected.getMainAttributes(), "Actual " + actual.getMainAttributes() + " expected " + expected.getMainAttributes())
     jf.close()
   }
 
