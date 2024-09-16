@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Inversoft Inc., All Rights Reserved
+ * Copyright (c) 2014-2024, Inversoft Inc., All Rights Reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,18 @@
  */
 package org.savantbuild.plugin.file
 
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.jar.Attributes
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+import java.util.jar.JarInputStream
+import java.util.jar.Manifest
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
+
 import org.savantbuild.dep.domain.License
 import org.savantbuild.domain.Project
 import org.savantbuild.domain.Version
@@ -26,15 +38,12 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.BeforeSuite
 import org.testng.annotations.Test
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.jar.*
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipInputStream
-
-import static org.testng.Assert.*
+import static org.testng.Assert.assertEquals
+import static org.testng.Assert.assertFalse
+import static org.testng.Assert.assertNotNull
+import static org.testng.Assert.assertNull
+import static org.testng.Assert.assertTrue
+import static org.testng.Assert.fail
 
 /**
  * Tests the FilePlugin class.
@@ -66,7 +75,7 @@ class FilePluginTest {
     project = new Project(projectDir, output)
     project.group = "org.savantbuild.test"
     project.name = "file-plugin-test"
-    project.version = new Version("1.0")
+    project.version = new Version("1.0.0")
     project.licenses.add(License.parse("ApacheV2_0", null))
 
     plugin = new FilePlugin(project, new RuntimeConfiguration(), output)
@@ -135,7 +144,7 @@ class FilePluginTest {
     Files.write(projectDir.resolve("build/test/file4-1.0.[second].txt"), "Some text".getBytes())
     Files.write(projectDir.resolve("build/test/file5.txt"), "Some text".getBytes())
 
-    plugin.delete{
+    plugin.delete {
       fileSet(dir: "build/test", includePatterns: [~/.+\{integration}\.+/, ~/.+\[second].+/])
     }
 
@@ -264,13 +273,13 @@ class FilePluginTest {
     process.consumeProcessOutput()
     process.waitFor()
 
-    assertEquals(process.exitValue(), 0)
+    assertEquals((int) process.exitValue(), 0)
 
     process = "tar -xvf test.tar".execute([], projectDir.resolve("build/test/tar").toFile())
     process.consumeProcessOutput()
     process.waitFor()
 
-    assertEquals(process.exitValue(), 0)
+    assertEquals((int) process.exitValue(), 0)
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
   }
@@ -287,7 +296,7 @@ class FilePluginTest {
     process.consumeProcessOutput()
     process.waitFor()
 
-    assertEquals(process.exitValue(), 0)
+    assertEquals((int) process.exitValue(), 0)
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
     assertTrue(Files.isReadable(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
     assertTrue(Files.isWritable(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
@@ -308,7 +317,7 @@ class FilePluginTest {
     process.consumeProcessOutput()
     process.waitFor()
 
-    assertEquals(process.exitValue(), 0)
+    assertEquals((int) process.exitValue(), 0)
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/org/savantbuild/plugin/file/FilePlugin.class")))
     assertTrue(Files.isRegularFile(projectDir.resolve("build/test/tar/testing123/org/savantbuild/plugin/file/FilePluginTest.class")))
   }
@@ -390,7 +399,7 @@ class FilePluginTest {
     }
 
     assertEquals(Files.readAllBytes(original), baos.toByteArray())
-    assertEquals(jarEntry.getSize(), Files.size(original))
+    assertEquals((long) jarEntry.getSize(), Files.size(original))
     assertEquals(jarEntry.getCreationTime(), Files.getAttribute(original, "creationTime"))
     jis.close()
   }
@@ -437,7 +446,7 @@ class FilePluginTest {
     }
 
     assertEquals(Files.readAllBytes(original), baos.toByteArray())
-    assertEquals(zipEntry.getSize(), Files.size(original))
+    assertEquals((long) zipEntry.getSize(), Files.size(original))
     jis.close()
   }
 }
